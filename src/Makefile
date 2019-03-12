@@ -22,8 +22,8 @@ GEN_IMAGES= eagle.app.v6.out
 GEN_BINS= eagle.app.v6.bin
 SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=         \
-	app          \
-	library
+	library      \
+	app
 
 endif # } PDIR
 
@@ -47,8 +47,8 @@ ifeq ($(FLAVOR),release)
 endif
 
 COMPONENTS_eagle.app.v6 =   \
-	app/libapp.a            \
-	library/liblibrary.a
+	library/liblibrary.a    \
+	app/libapp.a
 
 LINKFLAGS_eagle.app.v6 =       \
 	-L../lib                   \
