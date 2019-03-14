@@ -3,4 +3,5 @@ env.sh
 *.bin
 *.dump
 *.S
+*.a
 version.txt

@@ -20,8 +20,8 @@ extern "C"
 #include "mem.h"
 #include "user_interface.h"
 #include "esp8266_io.h"
-#include "do_sequence.h"
-#include "di_sequence.h"
+#include "library_do_sequence.h"
+#include "library_di_sequence.h"
 
 #ifdef ESPBOT
     // these are espbot_2.0 memory management methods
@@ -35,7 +35,7 @@ extern "C"
 #endif
 }
 
-#include "dht.hpp"
+#include "library_dht.hpp"
 
 #ifdef ESPBOT
 
@@ -68,29 +68,10 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
     {
         PRINT_ERROR("DHT [D%d] reading timeout, %d samples acquired\n", dht_ptr->m_pin, (dht_ptr->m_dht_in_sequence)->current_pulse);
         seq_di_clear(dht_ptr->m_dht_in_sequence);
-
-        // retry
-        // if poll_timer_value > 5 times * 2 seconds (minimum poll)
-        //if (dht_ptr->m_poll_interval > (5 * 2))
-        if (dht_ptr->m_poll_interval > 2)
-        {
-            // then retry in 2 seconds
-            dht_ptr->m_retry = true;
-            os_timer_disarm(&(dht_ptr->m_poll_timer));
-            os_timer_arm(&(dht_ptr->m_poll_timer), 2 * 1000, 1);
-        }
         return;
     }
     else
     {
-        // if coming from a retry then restore original timer
-        if (dht_ptr->m_retry)
-        {
-            os_timer_disarm(&(dht_ptr->m_poll_timer));
-            os_timer_arm(&(dht_ptr->m_poll_timer), (dht_ptr->m_poll_interval * 1000), 1);
-            dht_ptr->m_retry = false;
-        }
-
         // check preparation to send data into read sequence
         uint32 pulse_duration = get_di_seq_pulse_duration(dht_ptr->m_dht_in_sequence, 0);
         if ((pulse_duration < 70) || (pulse_duration > 90))
@@ -267,7 +248,6 @@ void ICACHE_FLASH_ATTR Dht::init(int pin, Dht_type type, int poll_interval, int 
         m_timestamp_buffer[idx] = 0;
     m_max_buffer_size = buffer_length;
     m_buffer_idx = 0;
-    m_retry = false;
 
     // start polling
     os_timer_disarm(&m_poll_timer);
@@ -295,7 +275,10 @@ float ICACHE_FLASH_ATTR Dht::get_temperature(Temp_scale scale, int idx)
             return ((m_temperature_buffer[index] * 1.8) + 32);
     case DHT22:
     case DHT21:
-        return (m_temperature_buffer[index] * 0.1);
+        if (scale == Celsius)
+            return (m_temperature_buffer[index] * 0.1);
+        else if (scale == Fahrenheit)
+            return (((m_temperature_buffer[index] * 0.1) * 1.8) + 32);
     }
 }
 

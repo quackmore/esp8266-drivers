@@ -11,13 +11,14 @@
 extern "C"
 {
 #include "mem.h"
-#include "dio_task.h"
+#include "library_dio_task.h"
 #include "esp8266_io.h"
 }
 
 #include "app.hpp"
 #include "espbot_global.hpp"
-#include "dht.hpp"
+#include "library_dht.hpp"
+#include "library_max6675.hpp"
 
 /*
  *  APP_RELEASE is coming from git
@@ -33,11 +34,13 @@ char *app_name = "App Example";
 char *app_release = APP_RELEASE;
 
 Dht dht22;
+Max6675 max6675;
 
 void ICACHE_FLASH_ATTR app_init_before_wifi(void)
 {
     init_dio_task();
-    dht22.init(ESPBOT_D2, DHT22, 5, 30);
+    dht22.init(ESPBOT_D2, DHT22, 180, 30);
+    max6675.init(ESPBOT_D5, ESPBOT_D6, ESPBOT_D7, 30, 30);
 }
 
 void ICACHE_FLASH_ATTR app_init_after_wifi(void)

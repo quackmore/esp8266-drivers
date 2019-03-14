@@ -14,8 +14,8 @@ extern "C"
 #include "mem.h"
 #include "user_interface.h"
 #include "ip_addr.h"
-#include "di_sequence.h"
-#include "do_sequence.h"
+#include "library_di_sequence.h"
+#include "library_do_sequence.h"
 #include "esp8266_io.h"
 #include "gpio.h"
 }
@@ -562,7 +562,74 @@ void ICACHE_FLASH_ATTR run_test(int idx)
                       esp_sntp.get_timestr(dht22.get_timestamp()));
     }
     break;
+    case 13:
+    {
+        // Dht class test
+        os_printf("Latest DHT22 reading\n");
+        if (dht22.get_invalid())
+            os_printf("--- (invalid) %d %d %s",
+                      (int)(dht22.get_temperature(Fahrenheit) * 10),
+                      (int)(dht22.get_humidity() * 10),
+                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        else
+            os_printf("---           %d %d %s",
+                      (int)(dht22.get_temperature(Fahrenheit) * 10),
+                      (int)(dht22.get_humidity() * 10),
+                      esp_sntp.get_timestr(dht22.get_timestamp()));
+    }
+    break;
+    case 14:
+    {
+        // Max6675 class test
+        int idx;
+        os_printf("Max6675 samples\n");
+        for (idx = 0; idx < 30; idx++)
+        {
+            if (max6675.get_invalid(idx))
+                os_printf("--- %d (invalid) %d %s",
+                          idx,
+                          (int)(max6675.get_temperature(Celsius, idx) * 100),
+                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+            else
+                os_printf("--- %d           %d %s",
+                          idx,
+                          (int)(max6675.get_temperature(Celsius, idx) * 100),
+                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        }
+        os_printf("Max6675 end\n");
+    }
+    break;
+    case 15:
+    {
+        // Dht class test
+        os_printf("Latest Max6675 reading\n");
+        if (max6675.get_invalid())
+            os_printf("--- %d (invalid) %d %s",
+                      idx,
+                      (int)(max6675.get_temperature(Celsius, idx) * 100),
+                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        else
+            os_printf("---           %d %s",
+                      (int)(max6675.get_temperature(Celsius) * 100),
+                      esp_sntp.get_timestr(max6675.get_timestamp()));
+    }
+    break;
+    case 16:
+    {
+        // Dht class test
+        os_printf("Latest Max6675 reading\n");
+        if (max6675.get_invalid())
+            os_printf("--- %d (invalid) %d %s",
+                      idx,
+                      (int)(max6675.get_temperature(Celsius, idx) * 100),
+                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        else
+            os_printf("---           %d %s",
+                      (int)(max6675.get_temperature(Fahrenheit) * 100),
+                      esp_sntp.get_timestr(max6675.get_timestamp()));
+    }
+    break;
     default:
         break;
     }
-    }
+}

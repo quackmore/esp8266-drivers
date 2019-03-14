@@ -21,7 +21,6 @@
 #include "webclient.hpp"
 #include "ota_upgrade.hpp"
 #include "gpio.hpp"
-#include "dht.hpp"
 
 extern char *espbot_release;
 extern Str_list esp_event_log;

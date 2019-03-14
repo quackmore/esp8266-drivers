@@ -14,8 +14,8 @@
 #include "user_interface.h"
 #include "hw_timer.h"
 #include "esp8266_io.h"
-#include "di_sequence.h"
-#include "dio_task.h"
+#include "library_di_sequence.h"
+#include "library_dio_task.h"
 
 #ifdef ESPBOT
 // these are espbot_2.0 memory management methods

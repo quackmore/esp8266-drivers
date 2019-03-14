@@ -9,7 +9,8 @@
 #ifndef __APP_HPP__
 #define __APP_HPP__
 
-#include "dht.hpp"
+#include "library_dht.hpp"
+#include "library_max6675.hpp"
 
 void app_init_before_wifi(void);
 void app_init_after_wifi(void);
@@ -19,5 +20,6 @@ extern char *app_name;
 extern char *app_release;
 
 extern Dht dht22;
+extern Max6675 max6675;
 
 #endif
