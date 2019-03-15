@@ -10,7 +10,7 @@
 #ifndef __APP_HTTP_ROUTES_HPP__
 #define __APP_HTTP_ROUTES_HPP__
 
-#include "webserver.hpp"
+#include "espbot_webserver.hpp"
 
 bool app_http_routes(struct espconn *ptr_espconn, Html_parsed_req *parsed_req);
 

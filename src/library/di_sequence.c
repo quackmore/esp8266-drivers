@@ -12,7 +12,7 @@
 #include "osapi.h"
 #include "mem.h"
 #include "user_interface.h"
-#include "hw_timer.h"
+#include "driver_hw_timer.h"
 #include "esp8266_io.h"
 #include "library_di_sequence.h"
 #include "library_dio_task.h"

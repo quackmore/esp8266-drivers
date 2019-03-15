@@ -23,7 +23,7 @@ extern "C"
 #include "app.hpp"
 #include "app_test.hpp"
 #include "espbot_global.hpp"
-#include "debug.hpp"
+#include "espbot_debug.hpp"
 
 // function for testing purpose
 
