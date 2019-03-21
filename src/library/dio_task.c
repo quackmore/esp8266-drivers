@@ -11,20 +11,10 @@
 #include "osapi.h"
 #include "user_interface.h"
 #include "mem.h"
+#include "library.h"
 #include "library_dio_task.h"
 #include "library_do_sequence.h"
 #include "library_di_sequence.h"
-
-#ifdef ESPBOT
-// these are espbot_2.0 memory management methods
-// https://github.com/quackmore/espbot_2.0
-extern void *call_espbot_zalloc(size_t size);
-extern void call_espbot_free(void *addr);
-#else
-// these are Espressif non-os-sdk memory management methods
-#define call_espbot_zalloc(a) os_zalloc(a)
-#define call_espbot_free(a) os_free(a)
-#endif
 
 static os_event_t *dio_queue;
 

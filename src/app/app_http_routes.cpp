@@ -14,7 +14,6 @@ extern "C"
 #include "user_interface.h"
 #include "mem.h"
 #include "ip_addr.h"
-#include "library.h"
 }
 
 #include "espbot_webserver.hpp"
@@ -27,6 +26,7 @@ extern "C"
 #include "espbot_debug.hpp"
 #include "app.hpp"
 #include "app_test.hpp"
+#include "library.hpp"
 
 bool ICACHE_FLASH_ATTR app_http_routes(struct espconn *ptr_espconn, Html_parsed_req *parsed_req)
 {

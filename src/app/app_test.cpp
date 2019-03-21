@@ -24,6 +24,7 @@ extern "C"
 #include "app_test.hpp"
 #include "espbot_global.hpp"
 #include "espbot_debug.hpp"
+#include "library.hpp"
 
 // function for testing purpose
 
@@ -63,6 +64,51 @@ static void ICACHE_FLASH_ATTR input_seq_completed(void *param)
 uint32 start_time;
 uint32 end_time;
 static di_seq *dht_input;
+
+static void ICACHE_FLASH_ATTR print_sensor(sensor_t *sensor)
+{
+    Heap_chunk str(20);
+    os_printf("         SENSOR\n");
+    os_printf("===>       name: %s\n", sensor->name);
+    os_printf("===>         id: %d\n", sensor->sensor_id);
+    os_printf("===>       type: %d\n", sensor->type);
+    os_printf("===>  max value: %s\n", f2str(str.ref, sensor->max_value, 2));
+    os_printf("===>  min value: %s\n", f2str(str.ref, sensor->min_value, 2));
+    os_printf("===> resolution: %s\n", f2str(str.ref, sensor->resolution, 2));
+    os_printf("===>  min delay: %d\n", sensor->min_delay);
+}
+
+static void ICACHE_FLASH_ATTR print_event(sensors_event_t *event, int decimals)
+{
+    Heap_chunk str(20);
+    os_printf("          EVENT\n");
+    os_printf("==>   sensor id: %d\n", event->sensor_id);
+    os_printf("==> sensor type: %d\n", event->type);
+    os_printf("==>     invalid: %d\n", event->invalid);
+    os_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
+    os_printf("==>   timestamp: %s\n", esp_sntp.get_timestr(event->timestamp));
+}
+
+static void ICACHE_FLASH_ATTR get_and_print_max6675_event(void *param)
+{
+    sensors_event_t event;
+    max6675->getEvent(&event);
+    print_event(&event, 2);
+}
+
+static void ICACHE_FLASH_ATTR get_and_print_dht22_temperature_event(void *param)
+{
+    sensors_event_t event;
+    dht22->temperature.getEvent(&event);
+    print_event(&event, 1);
+}
+
+static void ICACHE_FLASH_ATTR get_and_print_dht22_humidity_event(void *param)
+{
+    sensors_event_t event;
+    dht22->humidity.getEvent(&event);
+    print_event(&event, 1);
+}
 
 static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
 {
@@ -504,129 +550,213 @@ void ICACHE_FLASH_ATTR run_test(int idx)
         exe_do_seq_ms(seq);
     }
     break;
-    case 10:
+        //    case 10:
+        //    {
+        //        // DHT reading
+        //        // Send start sequence
+        //        // High ____                    ____
+        //        // Low      |_____ 1,5 ms _____|
+        //        PIN_FUNC_SELECT(ESPBOT_D2_MUX, ESPBOT_D2_FUNC);
+        //        GPIO_OUTPUT_SET(ESPBOT_D2_NUM, ESPBOT_HIGH);
+        //        seq = new_do_seq(ESPBOT_D2_NUM, 1);
+        //        set_do_seq_cb(seq, dht_start_completed, (void *)seq, task);
+        //        out_seq_add(seq, ESPBOT_LOW, 1500);
+        //        // out_seq_add(seq, ESPBOT_HIGH, 20);
+        //        // prepare input sequence
+        //        dht_input = new_di_seq(ESPBOT_D2_NUM, 82, 1000, TIMEOUT_MS);
+        //        set_di_seq_cb(dht_input, dht_reading_completed, (void *)dht_input, task);
+        //
+        //        exe_do_seq_us(seq);
+        //    }
+        //    break;
+        //    case 11:
+        //    {
+        //        // Dht class test
+        //        int idx;
+        //        os_printf("DHT22 samples\n");
+        //        for (idx = 0; idx < 30; idx++)
+        //        {
+        //            if (dht22.get_invalid(idx))
+        //                os_printf("--- %d (invalid) %d %d %s",
+        //                          idx,
+        //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
+        //                          (int)(dht22.get_humidity(idx) * 10),
+        //                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
+        //            else
+        //                os_printf("--- %d           %d %d %s",
+        //                          idx,
+        //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
+        //                          (int)(dht22.get_humidity(idx) * 10),
+        //                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
+        //        }
+        //        os_printf("DHT22 end\n");
+        //    }
+        //    break;
+        //    case 12:
+        //    {
+        //        // Dht class test
+        //        os_printf("Latest DHT22 reading\n");
+        //        if (dht22.get_invalid())
+        //            os_printf("--- (invalid) %d %d %s",
+        //                      (int)(dht22.get_temperature(Celsius) * 10),
+        //                      (int)(dht22.get_humidity() * 10),
+        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //        else
+        //            os_printf("---           %d %d %s",
+        //                      (int)(dht22.get_temperature(Celsius) * 10),
+        //                      (int)(dht22.get_humidity() * 10),
+        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //    }
+        //    break;
+        //    case 13:
+        //    {
+        //        // Dht class test
+        //        os_printf("Latest DHT22 reading\n");
+        //        if (dht22.get_invalid())
+        //            os_printf("--- (invalid) %d %d %s",
+        //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
+        //                      (int)(dht22.get_humidity() * 10),
+        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //        else
+        //            os_printf("---           %d %d %s",
+        //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
+        //                      (int)(dht22.get_humidity() * 10),
+        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //    }
+        //    break;
+        //    case 14:
+        //    {
+        //        // Max6675 class test
+        //        int idx;
+        //        os_printf("Max6675 samples\n");
+        //        for (idx = 0; idx < 30; idx++)
+        //        {
+        //            if (max6675.get_invalid(idx))
+        //                os_printf("--- %d (invalid) %d %s",
+        //                          idx,
+        //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
+        //                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //            else
+        //                os_printf("--- %d           %d %s",
+        //                          idx,
+        //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
+        //                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //        }
+        //        os_printf("Max6675 end\n");
+        //    }
+        //    break;
+        //    case 15:
+        //    {
+        //        // Dht class test
+        //        os_printf("Latest Max6675 reading\n");
+        //        if (max6675.get_invalid())
+        //            os_printf("--- %d (invalid) %d %s",
+        //                      idx,
+        //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
+        //                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //        else
+        //            os_printf("---           %d %s",
+        //                      (int)(max6675.get_temperature(Celsius) * 100),
+        //                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        //    }
+        //    break;
+        //    case 16:
+        //    {
+        //        // Dht class test
+        //        os_printf("Latest Max6675 reading\n");
+        //        if (max6675.get_invalid())
+        //            os_printf("--- %d (invalid) %d %s",
+        //                      idx,
+        //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
+        //                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //        else
+        //            os_printf("---           %d %s",
+        //                      (int)(max6675.get_temperature(Fahrenheit) * 100),
+        //                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        //    }
+        //    break;
+    case 17:
     {
-        // DHT reading
-        // Send start sequence
-        // High ____                    ____
-        // Low      |_____ 1,5 ms _____|
-        PIN_FUNC_SELECT(ESPBOT_D2_MUX, ESPBOT_D2_FUNC);
-        GPIO_OUTPUT_SET(ESPBOT_D2_NUM, ESPBOT_HIGH);
-        seq = new_do_seq(ESPBOT_D2_NUM, 1);
-        set_do_seq_cb(seq, dht_start_completed, (void *)seq, task);
-        out_seq_add(seq, ESPBOT_LOW, 1500);
-        // out_seq_add(seq, ESPBOT_HIGH, 20);
-        // prepare input sequence
-        dht_input = new_di_seq(ESPBOT_D2_NUM, 82, 1000, TIMEOUT_MS);
-        set_di_seq_cb(dht_input, dht_reading_completed, (void *)dht_input, task);
+        // MAX6675 single reading and force reading
+        sensor_t sensor;
+        max6675->getSensor(&sensor);
+        print_sensor(&sensor);
+        sensors_event_t event;
+        max6675->getEvent(&event);
+        print_event(&event, 2);
 
-        exe_do_seq_us(seq);
+        max6675->force_reading(get_and_print_max6675_event, NULL);
     }
     break;
-    case 11:
+    case 18:
     {
-        // Dht class test
+        // MAX6675 all events reading
+        sensor_t sensor;
+        max6675->getSensor(&sensor);
+        print_sensor(&sensor);
         int idx;
-        os_printf("DHT22 samples\n");
-        for (idx = 0; idx < 30; idx++)
+        sensors_event_t event;
+        for (idx = 0; idx < max6675->get_max_events_count(); idx++)
         {
-            if (dht22.get_invalid(idx))
-                os_printf("--- %d (invalid) %d %d %s",
-                          idx,
-                          (int)(dht22.get_temperature(Celsius, idx) * 10),
-                          (int)(dht22.get_humidity(idx) * 10),
-                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
-            else
-                os_printf("--- %d           %d %d %s",
-                          idx,
-                          (int)(dht22.get_temperature(Celsius, idx) * 10),
-                          (int)(dht22.get_humidity(idx) * 10),
-                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
+            max6675->getEvent(&event, idx);
+            print_event(&event, 2);
         }
-        os_printf("DHT22 end\n");
     }
     break;
-    case 12:
+    case 19:
     {
-        // Dht class test
-        os_printf("Latest DHT22 reading\n");
-        if (dht22.get_invalid())
-            os_printf("--- (invalid) %d %d %s",
-                      (int)(dht22.get_temperature(Celsius) * 10),
-                      (int)(dht22.get_humidity() * 10),
-                      esp_sntp.get_timestr(dht22.get_timestamp()));
-        else
-            os_printf("---           %d %d %s",
-                      (int)(dht22.get_temperature(Celsius) * 10),
-                      (int)(dht22.get_humidity() * 10),
-                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        // DHT temperature single reading and force reading
+        sensor_t sensor;
+        dht22->temperature.getSensor(&sensor);
+        print_sensor(&sensor);
+        sensors_event_t event;
+        dht22->temperature.getEvent(&event);
+        print_event(&event, 1);
+
+        dht22->temperature.force_reading(get_and_print_dht22_temperature_event, NULL);
     }
     break;
-    case 13:
+    case 20:
     {
-        // Dht class test
-        os_printf("Latest DHT22 reading\n");
-        if (dht22.get_invalid())
-            os_printf("--- (invalid) %d %d %s",
-                      (int)(dht22.get_temperature(Fahrenheit) * 10),
-                      (int)(dht22.get_humidity() * 10),
-                      esp_sntp.get_timestr(dht22.get_timestamp()));
-        else
-            os_printf("---           %d %d %s",
-                      (int)(dht22.get_temperature(Fahrenheit) * 10),
-                      (int)(dht22.get_humidity() * 10),
-                      esp_sntp.get_timestr(dht22.get_timestamp()));
-    }
-    break;
-    case 14:
-    {
-        // Max6675 class test
+        // DHT temperature all events reading
+        sensor_t sensor;
+        dht22->temperature.getSensor(&sensor);
+        print_sensor(&sensor);
         int idx;
-        os_printf("Max6675 samples\n");
-        for (idx = 0; idx < 30; idx++)
+        sensors_event_t event;
+        for (idx = 0; idx < dht22->temperature.get_max_events_count(); idx++)
         {
-            if (max6675.get_invalid(idx))
-                os_printf("--- %d (invalid) %d %s",
-                          idx,
-                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
-            else
-                os_printf("--- %d           %d %s",
-                          idx,
-                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+            dht22->temperature.getEvent(&event, idx);
+            print_event(&event, 1);
         }
-        os_printf("Max6675 end\n");
     }
     break;
-    case 15:
+    case 21:
     {
-        // Dht class test
-        os_printf("Latest Max6675 reading\n");
-        if (max6675.get_invalid())
-            os_printf("--- %d (invalid) %d %s",
-                      idx,
-                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
-        else
-            os_printf("---           %d %s",
-                      (int)(max6675.get_temperature(Celsius) * 100),
-                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        // DHT humidity single reading and force reading
+        sensor_t sensor;
+        dht22->humidity.getSensor(&sensor);
+        print_sensor(&sensor);
+        sensors_event_t event;
+        dht22->humidity.getEvent(&event);
+        print_event(&event, 1);
+
+        dht22->humidity.force_reading(get_and_print_dht22_humidity_event, NULL);
     }
     break;
-    case 16:
+    case 22:
     {
-        // Dht class test
-        os_printf("Latest Max6675 reading\n");
-        if (max6675.get_invalid())
-            os_printf("--- %d (invalid) %d %s",
-                      idx,
-                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
-        else
-            os_printf("---           %d %s",
-                      (int)(max6675.get_temperature(Fahrenheit) * 100),
-                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        // DHT humidity all events reading
+        sensor_t sensor;
+        dht22->humidity.getSensor(&sensor);
+        print_sensor(&sensor);
+        int idx;
+        sensors_event_t event;
+        for (idx = 0; idx < dht22->humidity.get_max_events_count(); idx++)
+        {
+            dht22->humidity.getEvent(&event, idx);
+            print_event(&event, 1);
+        }
     }
     break;
     default:

@@ -33,14 +33,14 @@ extern "C"
 char *app_name = "App Example";
 char *app_release = APP_RELEASE;
 
-Dht dht22;
-Max6675 max6675;
+Dht *dht22;
+Max6675 *max6675;
 
 void ICACHE_FLASH_ATTR app_init_before_wifi(void)
 {
     init_dio_task();
-    dht22.init(ESPBOT_D2, DHT22, 180, 30);
-    max6675.init(ESPBOT_D5, ESPBOT_D6, ESPBOT_D7, 30, 30);
+    dht22 = new Dht(ESPBOT_D2, DHT22, 2000, 3000, 60000, 10);
+    max6675 = new Max6675(ESPBOT_D5, ESPBOT_D6, ESPBOT_D7, 1000, 30000, 10);
 }
 
 void ICACHE_FLASH_ATTR app_init_after_wifi(void)

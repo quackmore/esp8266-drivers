@@ -4,4 +4,6 @@ env.sh
 *.dump
 *.S
 version.txt
-lib/*.a
+lib/libapp.a
+lib/libuser.a
+lib/liblibrary.a

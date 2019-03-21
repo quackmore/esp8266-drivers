@@ -22,44 +22,10 @@ extern "C"
 #include "esp8266_io.h"
 #include "library_do_sequence.h"
 #include "library_di_sequence.h"
-
-#ifdef ESPBOT
-    // these are espbot_2.0 memory management methods
-    // https://github.com/quackmore/espbot_2.0
-    extern void *call_espbot_zalloc(size_t size);
-    extern void call_espbot_free(void *addr);
-#else
-#define call_espbot_zalloc(a) os_zalloc(a)
-#define call_espbot_free(a) os_free(a)
-#define getTimestamp() system_get_time();
-#endif
 }
 
+#include "library.hpp"
 #include "library_dht.hpp"
-
-#ifdef ESPBOT
-
-#include "espbot_global.hpp"
-#define PRINT_FATAL(...) esplog.fatal(__VA_ARGS__)
-#define PRINT_ERROR(...) esplog.error(__VA_ARGS__)
-#define PRINT_WARN(...) esplog.warn(__VA_ARGS__)
-#define PRINT_INFO(...) esplog.info(__VA_ARGS__)
-#define PRINT_DEBUG(...) esplog.debug(__VA_ARGS__)
-#define PRINT_TRACE(...) esplog.trace(__VA_ARGS__)
-#define PRINT_ALL(...) esplog.all(__VA_ARGS__)
-#define getTimestamp() esp_sntp.get_timestamp();
-
-#else
-
-#define PRINT_FATAL(...) os_printf(__VA_ARGS__)
-#define PRINT_ERROR(...) os_printf(__VA_ARGS__)
-#define PRINT_WARN(...) os_printf(__VA_ARGS__)
-#define PRINT_INFO(...) os_printf(__VA_ARGS__)
-#define PRINT_DEBUG(...) os_printf(__VA_ARGS__)
-#define PRINT_TRACE(...) os_printf(__VA_ARGS__)
-#define PRINT_ALL(...) os_printf(__VA_ARGS__)
-
-#endif
 
 static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
 {
@@ -163,6 +129,18 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
             dht_ptr->m_buffer_idx++;
         seq_di_clear(dht_ptr->m_dht_in_sequence);
     }
+    // done with reading
+    dht_ptr->m_reading_ongoing = false;
+    // still something to do if it was a force reading
+    if (dht_ptr->m_force_reading)
+    {
+        dht_ptr->m_force_reading = false;
+        // restart polling
+        os_timer_disarm(&(dht_ptr->m_poll_timer));
+        os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
+
+        dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
+    }
 }
 
 static void dht_start_completed(void *param)
@@ -182,6 +160,7 @@ static void dht_start_completed(void *param)
 
 static void dht_read(Dht *dht_ptr)
 {
+    dht_ptr->m_reading_ongoing = true;
     // configure Dx as output and set it High
     PIN_FUNC_SELECT(gpio_MUX(dht_ptr->m_pin), gpio_FUNC(dht_ptr->m_pin));
     GPIO_OUTPUT_SET(gpio_NUM(dht_ptr->m_pin), ESPBOT_HIGH);
@@ -205,8 +184,47 @@ static void dht_read(Dht *dht_ptr)
     exe_do_seq_us(dht_ptr->m_dht_out_sequence);
 }
 
-ICACHE_FLASH_ATTR Dht::Dht()
+ICACHE_FLASH_ATTR Dht::Dht(int pin,
+                           Dht_type type,
+                           int temperature_id,
+                           int humidity_id,
+                           int poll_interval,
+                           int buffer_length)
+    : temperature(this, temperature_id),
+      humidity(this, humidity_id)
 {
+    int idx;
+    for (idx = 0; idx < 5; idx++)
+        m_data[idx] = 0;
+    m_pin = pin;
+    m_type = type;
+    m_poll_interval = poll_interval;
+    m_max_buffer_size = buffer_length;
+    // data buffers
+    m_temperature_buffer = new int[m_max_buffer_size];
+    for (idx = 0; idx < m_max_buffer_size; idx++)
+        m_temperature_buffer[idx] = 0;
+    m_humidity_buffer = new int[m_max_buffer_size];
+    for (idx = 0; idx < m_max_buffer_size; idx++)
+        m_humidity_buffer[idx] = 0;
+    m_invalid_buffer = new bool[m_max_buffer_size];
+    for (idx = 0; idx < m_max_buffer_size; idx++)
+        m_invalid_buffer[idx] = true;
+    m_timestamp_buffer = new uint32_t[m_max_buffer_size];
+    for (idx = 0; idx < m_max_buffer_size; idx++)
+        m_timestamp_buffer[idx] = 0;
+    m_buffer_idx = 0;
+
+    m_dht_out_sequence = NULL;
+    m_dht_in_sequence = NULL;
+    m_force_reading = false;
+    m_force_reading_cb = NULL;
+    m_force_reading_param = NULL;
+    m_reading_ongoing = false;
+    // setup polling
+    os_timer_disarm(&m_poll_timer);
+    os_timer_setfn(&m_poll_timer, (os_timer_func_t *)dht_read, this);
+    os_timer_arm(&m_poll_timer, m_poll_interval, 1);
 }
 
 ICACHE_FLASH_ATTR Dht::~Dht()
@@ -215,116 +233,198 @@ ICACHE_FLASH_ATTR Dht::~Dht()
         free_di_seq(m_dht_in_sequence);
     if (m_dht_out_sequence)
         free_do_seq(m_dht_out_sequence);
-    call_espbot_free(m_temperature_buffer);
-    call_espbot_free(m_humidity_buffer);
-    call_espbot_free(m_invalid_buffer);
-    call_espbot_free(m_timestamp_buffer);
+    delete[] m_temperature_buffer;
+    delete[] m_humidity_buffer;
+    delete[] m_invalid_buffer;
+    delete[] m_timestamp_buffer;
 }
 
-void ICACHE_FLASH_ATTR Dht::init(int pin, Dht_type type, int poll_interval, int buffer_length)
+ICACHE_FLASH_ATTR Dht::Temperature::Temperature(Dht *parent, int id)
 {
-    // init variables
-    int idx;
-    for (idx = 0; idx < 5; idx++)
-        m_data[idx] = 0;
-    m_pin = pin;
-    m_type = type;
-    m_poll_interval = poll_interval;
-    if (m_poll_interval < 2)
-        m_poll_interval = 2;
-    m_dht_out_sequence = NULL;
-    m_dht_in_sequence = NULL;
-    m_temperature_buffer = (int *)call_espbot_zalloc(buffer_length * sizeof(int));
-    for (idx = 0; idx < buffer_length; idx++)
-        m_temperature_buffer[idx] = 0;
-    m_humidity_buffer = (int *)call_espbot_zalloc(buffer_length * sizeof(int));
-    for (idx = 0; idx < buffer_length; idx++)
-        m_humidity_buffer[idx] = 0;
-    m_invalid_buffer = (bool *)call_espbot_zalloc(buffer_length * sizeof(bool));
-    for (idx = 0; idx < buffer_length; idx++)
-        m_invalid_buffer[idx] = true;
-    m_timestamp_buffer = (uint32_t *)call_espbot_zalloc(buffer_length * sizeof(int));
-    for (idx = 0; idx < buffer_length; idx++)
-        m_timestamp_buffer[idx] = 0;
-    m_max_buffer_size = buffer_length;
-    m_buffer_idx = 0;
-
-    // start polling
-    os_timer_disarm(&m_poll_timer);
-    os_timer_setfn(&m_poll_timer, (os_timer_func_t *)dht_read, this);
-    os_timer_arm(&m_poll_timer, m_poll_interval * 1000, 1);
+    m_parent = parent;
+    m_id = id;
 }
 
-float ICACHE_FLASH_ATTR Dht::get_temperature(Temp_scale scale, int idx)
+ICACHE_FLASH_ATTR Dht::Temperature::~Temperature()
 {
-    int index = m_buffer_idx;
+}
+
+int ICACHE_FLASH_ATTR Dht::Temperature::get_max_events_count(void)
+{
+    return m_parent->m_max_buffer_size;
+}
+
+void ICACHE_FLASH_ATTR Dht::Temperature::force_reading(void (*callback)(void *), void *param)
+{
+    m_parent->m_force_reading_cb = callback;
+    m_parent->m_force_reading_param = param;
+    m_parent->m_force_reading = true;
+    // in case a reading is ongoing do nothing
+    // else stop the polling timer and force a reading start
+    if (!m_parent->m_reading_ongoing)
+    {
+        // stop_polling
+        os_timer_disarm(&m_parent->m_poll_timer);
+        dht_read(m_parent);
+    }
+}
+
+void ICACHE_FLASH_ATTR Dht::Temperature::getEvent(sensors_event_t *event, int idx)
+{
+    os_memset(event, 0, sizeof(sensors_event_t));
+    event->sensor_id = m_id;
+    event->type = SENSOR_TYPE_TEMPERATURE;
+    // find the idx element
+    int index = m_parent->m_buffer_idx;
     while (idx > 0)
     {
         index = index - 1;
         if (index < 0)
-            index = m_max_buffer_size - 1;
+            index = m_parent->m_max_buffer_size - 1;
         idx--;
     }
-
-    switch (m_type)
+    event->timestamp = m_parent->m_timestamp_buffer[index];
+    event->invalid = m_parent->m_invalid_buffer[index];
+    switch (m_parent->m_type)
     {
     case DHT11:
-        if (scale == Celsius)
-            return m_temperature_buffer[index];
-        else if (scale == Fahrenheit)
-            return ((m_temperature_buffer[index] * 1.8) + 32);
+        event->temperature = (float)m_parent->m_temperature_buffer[index];
     case DHT22:
     case DHT21:
-        if (scale == Celsius)
-            return (m_temperature_buffer[index] * 0.1);
-        else if (scale == Fahrenheit)
-            return (((m_temperature_buffer[index] * 0.1) * 1.8) + 32);
+        event->temperature = ((float)m_parent->m_temperature_buffer[index] * 0.1);
     }
 }
 
-float ICACHE_FLASH_ATTR Dht::get_humidity(int idx)
+void ICACHE_FLASH_ATTR Dht::Temperature::getSensor(sensor_t *sensor)
 {
-    int index = m_buffer_idx;
-    while (idx > 0)
-    {
-        index = index - 1;
-        if (index < 0)
-            index = m_max_buffer_size - 1;
-        idx--;
-    }
-
-    switch (m_type)
+    os_memset(sensor, 0, sizeof(sensor_t));
+    sensor->sensor_id = m_id;
+    sensor->type = SENSOR_TYPE_TEMPERATURE;
+    switch (m_parent->m_type)
     {
     case DHT11:
-        return m_humidity_buffer[index];
+        os_strncpy(sensor->name, "DHT11", 6);
+        sensor->max_value = 50.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 2.0;
+        sensor->min_delay = 1000000L; // 1 second (in microseconds)
+        break;
+    case DHT21:
+        os_strncpy(sensor->name, "DHT21", 6);
+        sensor->max_value = 80.0;
+        sensor->min_value = -40.0;
+        sensor->resolution = 0.1;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
+    case DHT22:
+        os_strncpy(sensor->name, "DHT22", 6);
+        sensor->max_value = 125.0;
+        sensor->min_value = -40.0;
+        sensor->resolution = 0.1;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
+    default:
+        // just in case
+        os_strncpy(sensor->name, "Unknown", 8);
+        sensor->max_value = 0.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 0.0;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
+    }
+}
+
+ICACHE_FLASH_ATTR Dht::Humidity::Humidity(Dht *parent, int id)
+{
+    m_parent = parent;
+    m_id = id;
+}
+
+ICACHE_FLASH_ATTR Dht::Humidity::~Humidity()
+{
+}
+
+int ICACHE_FLASH_ATTR Dht::Humidity::get_max_events_count(void)
+{
+    return m_parent->m_max_buffer_size;
+}
+
+void ICACHE_FLASH_ATTR Dht::Humidity::force_reading(void (*callback)(void *), void *param)
+{
+    m_parent->m_force_reading_cb = callback;
+    m_parent->m_force_reading_param = param;
+    m_parent->m_force_reading = true;
+    // in case a reading is ongoing do nothing
+    // else stop the polling timer and force a reading start
+    if (!m_parent->m_reading_ongoing)
+    {
+        // stop_polling
+        os_timer_disarm(&m_parent->m_poll_timer);
+        dht_read(m_parent);
+    }
+}
+
+void ICACHE_FLASH_ATTR Dht::Humidity::getEvent(sensors_event_t *event, int idx)
+{
+    os_memset(event, 0, sizeof(sensors_event_t));
+    event->sensor_id = m_id;
+    event->type = SENSOR_TYPE_RELATIVE_HUMIDITY;
+    // find the idx element
+    int index = m_parent->m_buffer_idx;
+    while (idx > 0)
+    {
+        index = index - 1;
+        if (index < 0)
+            index = m_parent->m_max_buffer_size - 1;
+        idx--;
+    }
+    event->timestamp = m_parent->m_timestamp_buffer[index];
+    event->invalid = m_parent->m_invalid_buffer[index];
+    switch (m_parent->m_type)
+    {
+    case DHT11:
+        event->relative_humidity = (float)m_parent->m_humidity_buffer[index];
     case DHT22:
     case DHT21:
-        return (m_humidity_buffer[index] * 0.1);
+        event->relative_humidity = ((float)m_parent->m_humidity_buffer[index] * 0.1);
     }
 }
 
-uint32_t ICACHE_FLASH_ATTR Dht::get_timestamp(int idx)
+void ICACHE_FLASH_ATTR Dht::Humidity::getSensor(sensor_t *sensor)
 {
-    int index = m_buffer_idx;
-    while (idx > 0)
+    os_memset(sensor, 0, sizeof(sensor_t));
+    sensor->sensor_id = m_id;
+    sensor->type = SENSOR_TYPE_RELATIVE_HUMIDITY;
+    switch (m_parent->m_type)
     {
-        index = index - 1;
-        if (index < 0)
-            index = m_max_buffer_size - 1;
-        idx--;
+    case DHT11:
+        os_strncpy(sensor->name, "DHT11", 6);
+        sensor->max_value = 100.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 2.0;
+        sensor->min_delay = 1000000L; // 1 second (in microseconds)
+        break;
+    case DHT21:
+        os_strncpy(sensor->name, "DHT21", 6);
+        sensor->max_value = 100.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 0.1;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
+    case DHT22:
+        os_strncpy(sensor->name, "DHT22", 6);
+        sensor->max_value = 100.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 0.1;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
+    default:
+        // just in case
+        os_strncpy(sensor->name, "Unknown", 8);
+        sensor->max_value = 100.0;
+        sensor->min_value = 0.0;
+        sensor->resolution = 2.0;
+        sensor->min_delay = 2000000L; // 2 seconds (in microseconds)
+        break;
     }
-    return m_timestamp_buffer[index];
-}
-
-bool ICACHE_FLASH_ATTR Dht::get_invalid(int idx)
-{
-    int index = m_buffer_idx;
-    while (idx > 0)
-    {
-        index = index - 1;
-        if (index < 0)
-            index = m_max_buffer_size - 1;
-        idx--;
-    }
-    return m_invalid_buffer[index];
 }
