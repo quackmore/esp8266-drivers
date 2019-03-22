@@ -28,6 +28,8 @@ extern "C"
 
 // function for testing purpose
 
+extern "C" char *f2str(char *str, float value, int decimals);
+
 static void ICACHE_FLASH_ATTR output_seq_completed(void *param)
 {
     struct do_seq *seq = (struct do_seq *)param;

@@ -29,60 +29,11 @@ extern "C"
 
 #ifdef ESPBOT
 
-char ICACHE_FLASH_ATTR *f2str(char *str, float value, int decimals)
-{
-    int32 value_int = (int32)value;
-    float value_dec = value - value_int;
-    if (value_dec < 0)
-        value_dec = -(value_dec);
-    int idx;
-    int pow = 1;
-    for (idx = 0; idx < decimals; idx++)
-        pow = pow * 10;
-    os_sprintf(str, "%d.%d", (int32)value, (int32)(value_dec * pow));
-    return str;
-}
-
-extern "C" void __cxa_pure_virtual(void)
-{
-    PRINT_ERROR("Uh oh, someone called a pure virtual function\n");
-}
-
-void *operator new(size_t size)
-{
-    return call_espbot_zalloc(size);
-}
-
-void *operator new[](size_t size)
-{
-    return call_espbot_zalloc(size);
-}
-
-void operator delete(void *p)
-{
-    call_espbot_free(p);
-}
-
-void operator delete[](void *p)
-{
-    call_espbot_free(p);
-}
+// 
 
 #else
 
-char ICACHE_FLASH_ATTR *f2str(char *str, float value, int decimals)
-{
-    int32 value_int = (int32)value;
-    float value_dec = value - value_int;
-    if (value_dec < 0)
-        value_dec = -(value_dec);
-    int idx;
-    int pow = 1;
-    for (idx = 0; idx < decimals; idx++)
-        pow = pow * 10;
-    os_sprintf(str, "%d.%d", (int32)value, (int32)(value_dec * pow));
-    return str;
-}
+// need to define some C++ syscalls
 
 extern "C" void __cxa_pure_virtual(void)
 {

@@ -33,6 +33,19 @@ static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
                     max6675_ptr->m_cs,
                     max6675_ptr->m_sck,
                     max6675_ptr->m_so);
+        // done with reading
+        max6675_ptr->m_reading_ongoing = false;
+        // still something to do if it was a force reading
+        if (max6675_ptr->m_force_reading)
+        {
+            max6675_ptr->m_force_reading = false;
+            // restart polling
+            os_timer_disarm(&(max6675_ptr->m_poll_timer));
+            if (max6675_ptr->m_poll_interval > 0)
+                os_timer_arm(&(max6675_ptr->m_poll_timer), max6675_ptr->m_poll_interval, 1);
+            // actually there was no reading but anyway ...
+            max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
+        }
         return;
     }
     // set the value as valid
@@ -54,7 +67,8 @@ static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
         max6675_ptr->m_force_reading = false;
         // restart polling
         os_timer_disarm(&(max6675_ptr->m_poll_timer));
-        os_timer_arm(&(max6675_ptr->m_poll_timer), max6675_ptr->m_poll_interval, 1);
+        if (max6675_ptr->m_poll_interval > 0)
+            os_timer_arm(&(max6675_ptr->m_poll_timer), max6675_ptr->m_poll_interval, 1);
 
         max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
     }
@@ -161,7 +175,8 @@ ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
     // start polling
     os_timer_disarm(&m_poll_timer);
     os_timer_setfn(&m_poll_timer, (os_timer_func_t *)max6675_read, this);
-    os_timer_arm(&m_poll_timer, m_poll_interval, 1);
+    if (m_poll_interval > 0)
+        os_timer_arm(&m_poll_timer, m_poll_interval, 1);
 }
 
 ICACHE_FLASH_ATTR Max6675::~Max6675()

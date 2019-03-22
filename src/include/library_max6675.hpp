@@ -25,7 +25,7 @@ public:
   // sck_pin          => the gpio pin D1.. D8 for SCK
   // so_pin           => the gpio pin D1.. D8 for SO
   // id               => sensor indentifier
-  // poll_interval    => in milliseconds  
+  // poll_interval    => in milliseconds (0 -> no polling)
   // buffer_length    => max number of stored readings  
   Max6675(int cs_pin, int sck_pin, int so_pin, int id, int poll_interval, int buffer_length);
   ~Max6675();

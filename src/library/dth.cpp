@@ -34,6 +34,19 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
     {
         PRINT_ERROR("DHT [D%d] reading timeout, %d samples acquired\n", dht_ptr->m_pin, (dht_ptr->m_dht_in_sequence)->current_pulse);
         seq_di_clear(dht_ptr->m_dht_in_sequence);
+        // done with reading
+        dht_ptr->m_reading_ongoing = false;
+        // still something to do if it was a force reading
+        if (dht_ptr->m_force_reading)
+        {
+            dht_ptr->m_force_reading = false;
+            // restart polling
+            os_timer_disarm(&(dht_ptr->m_poll_timer));
+            if (dht_ptr->m_poll_interval > 0)
+                os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
+            // actually there was no reading but anyway ...
+            dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
+        }
         return;
     }
     else
@@ -137,7 +150,8 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
         dht_ptr->m_force_reading = false;
         // restart polling
         os_timer_disarm(&(dht_ptr->m_poll_timer));
-        os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
+        if (dht_ptr->m_poll_interval > 0)
+            os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
 
         dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
     }
@@ -224,7 +238,8 @@ ICACHE_FLASH_ATTR Dht::Dht(int pin,
     // setup polling
     os_timer_disarm(&m_poll_timer);
     os_timer_setfn(&m_poll_timer, (os_timer_func_t *)dht_read, this);
-    os_timer_arm(&m_poll_timer, m_poll_interval, 1);
+    if (m_poll_interval > 0)
+        os_timer_arm(&m_poll_timer, m_poll_interval, 1);
 }
 
 ICACHE_FLASH_ATTR Dht::~Dht()

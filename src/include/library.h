@@ -26,8 +26,6 @@ void call_espbot_free(void *addr);
 #define PRINT_ALL(...) esplog.all(__VA_ARGS__)
 #define getTimestamp() esp_sntp.get_timestamp();
 
-char *f2str(char *str, float value, int decimals);
-
 #else
 
 #define call_espbot_zalloc(a) os_zalloc(a)
@@ -41,8 +39,6 @@ char *f2str(char *str, float value, int decimals);
 #define PRINT_DEBUG(...) os_printf(__VA_ARGS__)
 #define PRINT_TRACE(...) os_printf(__VA_ARGS__)
 #define PRINT_ALL(...) os_printf(__VA_ARGS__)
-
-char *f2str(char *str, float value, int decimals);
 
 #endif
 

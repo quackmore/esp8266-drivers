@@ -32,12 +32,11 @@ extern "C"
 #define PRINT_ALL(...) esplog.all(__VA_ARGS__)
 #define getTimestamp() esp_sntp.get_timestamp();
 
-char *f2str(char *str, float value, int decimals);
-
 #else
 
 extern "C"
 {
+#include "user_interface.h"
 #define call_espbot_zalloc(a) os_zalloc(a)
 #define call_espbot_free(a) os_free(a)
 #define getTimestamp() system_get_time();
@@ -50,8 +49,6 @@ extern "C"
 #define PRINT_DEBUG(...) os_printf(__VA_ARGS__)
 #define PRINT_TRACE(...) os_printf(__VA_ARGS__)
 #define PRINT_ALL(...) os_printf(__VA_ARGS__)
-
-char *f2str(char *str, float value, int decimals);
 
 #endif
 

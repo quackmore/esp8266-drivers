@@ -23,7 +23,9 @@ The library include files are:
 + library_dio_task.h
 + library_do_sequence.h
 + library_max6675.hpp
++ library_sensor.hpp
 + library.h
++ library.hpp
 
 Features:
 

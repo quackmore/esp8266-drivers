@@ -39,7 +39,7 @@ public:
   // type            => the sensor type (e.g. DHT22)
   // temperature_id  => sensor indentifier
   // humidity_id     => sensor indentifier
-  // poll_interval   => in milliseconds
+  // poll_interval   => in milliseconds (0 -> no polling)
   // buffer_length   => max number of stored readings
   Dht(int pin, Dht_type type, int temperature_id, int humidity_id, int poll_interval, int buffer_length);
   ~Dht();
