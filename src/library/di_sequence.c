@@ -25,12 +25,18 @@
 struct di_seq *new_di_seq(int pin, int num_pulses, int timeout_val, Di_timeout_unit timeout_unit)
 {
     struct di_seq *seq = (struct di_seq *)call_espbot_zalloc(sizeof(struct di_seq));
+    if (seq == NULL)
+        return NULL;
     seq->di_pin = pin;
     seq->pulse_max_count = num_pulses + 1;
     seq->timeout_val = timeout_val;
     seq->timeout_unit = timeout_unit;
     seq->pulse_level = (char *)call_espbot_zalloc(sizeof(char) * (num_pulses + 1));
+    if (seq->pulse_level == NULL)
+        return NULL;
     seq->pulse_duration = (uint32 *)call_espbot_zalloc(sizeof(uint32) * (num_pulses + 1));
+    if (seq->pulse_duration == NULL)
+        return NULL;
     return seq;
 }
 

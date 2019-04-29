@@ -156,12 +156,27 @@ ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
     m_max_buffer_size = buffer_length;
 
     m_temperature_buffer = new int[m_max_buffer_size];
+    if (m_temperature_buffer == NULL)
+    {
+        PRINT_ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_temperature_buffer[idx] = 0;
     m_timestamp_buffer = new uint32_t[m_max_buffer_size];
+    if (m_timestamp_buffer == NULL)
+    {
+        PRINT_ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_timestamp_buffer[idx] = 0;
     m_invalid_buffer = new bool[m_max_buffer_size];
+    if (m_invalid_buffer == NULL)
+    {
+        PRINT_ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_invalid_buffer[idx] = true;
     m_buffer_idx = 0;

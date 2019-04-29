@@ -184,6 +184,11 @@ static void dht_read(Dht *dht_ptr)
     if (!dht_ptr->m_dht_out_sequence)
     {
         dht_ptr->m_dht_out_sequence = new_do_seq(gpio_NUM(dht_ptr->m_pin), 2);
+        if (dht_ptr->m_dht_out_sequence == NULL)
+        {
+            PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+            return;
+        }
         set_do_seq_cb(dht_ptr->m_dht_out_sequence, dht_start_completed, (void *)dht_ptr, direct);
         out_seq_add(dht_ptr->m_dht_out_sequence, ESPBOT_LOW, 1500);
         out_seq_add(dht_ptr->m_dht_out_sequence, ESPBOT_HIGH, 10);
@@ -192,6 +197,11 @@ static void dht_read(Dht *dht_ptr)
     if (!dht_ptr->m_dht_in_sequence)
     {
         dht_ptr->m_dht_in_sequence = new_di_seq(ESPBOT_D2_NUM, 82, 100, TIMEOUT_MS);
+        if (dht_ptr->m_dht_in_sequence == NULL)
+        {
+            PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+            return;
+        }
         set_di_seq_cb(dht_ptr->m_dht_in_sequence, dht_reading_completed, (void *)dht_ptr, task);
     }
     // Send start sequence
@@ -216,15 +226,35 @@ ICACHE_FLASH_ATTR Dht::Dht(int pin,
     m_max_buffer_size = buffer_length;
     // data buffers
     m_temperature_buffer = new int[m_max_buffer_size];
+    if (m_temperature_buffer == NULL)
+    {
+        PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_temperature_buffer[idx] = 0;
     m_humidity_buffer = new int[m_max_buffer_size];
+    if (m_humidity_buffer == NULL)
+    {
+        PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_humidity_buffer[idx] = 0;
     m_invalid_buffer = new bool[m_max_buffer_size];
+    if (m_invalid_buffer == NULL)
+    {
+        PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_invalid_buffer[idx] = true;
     m_timestamp_buffer = new uint32_t[m_max_buffer_size];
+    if (m_timestamp_buffer == NULL)
+    {
+        PRINT_ERROR("DHT [D%d] not enough heap memory\n");
+        return;
+    }
     for (idx = 0; idx < m_max_buffer_size; idx++)
         m_timestamp_buffer[idx] = 0;
     m_buffer_idx = 0;

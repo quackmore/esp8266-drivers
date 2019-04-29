@@ -25,10 +25,16 @@
 struct do_seq *new_do_seq(int pin, int num_pulses)
 {
     struct do_seq *seq = (struct do_seq *)call_espbot_zalloc(sizeof(struct do_seq));
+    if (seq == NULL)
+        return NULL;
     seq->do_pin = pin;
     seq->pulse_max_count = num_pulses;
     seq->pulse_level = (char *)call_espbot_zalloc(sizeof(char) * num_pulses);
+    if (seq->pulse_level == NULL)
+        return NULL;
     seq->pulse_duration = (uint32 *)call_espbot_zalloc(sizeof(uint32) * num_pulses);
+    if (seq->pulse_duration == NULL)
+        return NULL;
     return seq;
 }
 

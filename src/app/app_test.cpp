@@ -24,6 +24,7 @@ extern "C"
 #include "app_test.hpp"
 #include "espbot_global.hpp"
 #include "espbot_debug.hpp"
+#include "espbot_utils.hpp"
 #include "library.hpp"
 
 // function for testing purpose
