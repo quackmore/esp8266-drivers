@@ -23,6 +23,7 @@ GEN_BINS= eagle.app.v6.bin
 SPECIAL_MKTARGETS=$(APP_MKTARGETS)
 SUBDIRS=         \
 	library      \
+	user      \
 	app
 
 endif # } PDIR
@@ -48,6 +49,7 @@ endif
 
 COMPONENTS_eagle.app.v6 =   \
 	library/liblibrary.a    \
+	user/libuser.a    \
 	app/libapp.a
 
 LINKFLAGS_eagle.app.v6 =       \
@@ -74,7 +76,6 @@ LINKFLAGS_eagle.app.v6 =       \
 	-ldriver                   \
 	-lespbot                   \
 	-lspiffs                   \
-	-luser                     \
 	$(DEP_LIBS_eagle.app.v6)   \
 	-Wl,--end-group
 #	-ljson	                   \

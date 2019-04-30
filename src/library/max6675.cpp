@@ -196,9 +196,12 @@ ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
 
 ICACHE_FLASH_ATTR Max6675::~Max6675()
 {
-    delete[] m_temperature_buffer;
-    delete[] m_timestamp_buffer;
-    delete[] m_invalid_buffer;
+    if (m_temperature_buffer)
+        delete[] m_temperature_buffer;
+    if (m_timestamp_buffer)
+        delete[] m_timestamp_buffer;
+    if (m_invalid_buffer)
+        delete[] m_invalid_buffer;
 }
 
 int ICACHE_FLASH_ATTR Max6675::get_max_events_count(void)
@@ -208,6 +211,11 @@ int ICACHE_FLASH_ATTR Max6675::get_max_events_count(void)
 
 void ICACHE_FLASH_ATTR Max6675::force_reading(void (*callback)(void *), void *param)
 {
+    // if the class was not properly allocated exit
+    if ((m_timestamp_buffer == NULL) ||
+        (m_invalid_buffer == NULL) ||
+        (m_temperature_buffer == NULL))
+        return;
     m_force_reading_cb = callback;
     m_force_reading_param = param;
     m_force_reading = true;
@@ -235,6 +243,9 @@ void ICACHE_FLASH_ATTR Max6675::getEvent(sensors_event_t *event, int idx)
             index = m_max_buffer_size - 1;
         idx--;
     }
+    // if the class was not properly allocated exit
+    if ((m_timestamp_buffer == NULL) || (m_invalid_buffer == NULL) || (m_temperature_buffer == NULL))
+        return;
     event->timestamp = m_timestamp_buffer[index];
     event->invalid = m_invalid_buffer[index];
     event->temperature = ((float)m_temperature_buffer[index] / 4);

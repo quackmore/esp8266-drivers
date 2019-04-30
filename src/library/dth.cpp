@@ -278,10 +278,14 @@ ICACHE_FLASH_ATTR Dht::~Dht()
         free_di_seq(m_dht_in_sequence);
     if (m_dht_out_sequence)
         free_do_seq(m_dht_out_sequence);
-    delete[] m_temperature_buffer;
-    delete[] m_humidity_buffer;
-    delete[] m_invalid_buffer;
-    delete[] m_timestamp_buffer;
+    if (m_temperature_buffer)
+        delete[] m_temperature_buffer;
+    if (m_humidity_buffer)
+        delete[] m_humidity_buffer;
+    if (m_invalid_buffer)
+        delete[] m_invalid_buffer;
+    if (m_timestamp_buffer)
+        delete[] m_timestamp_buffer;
 }
 
 ICACHE_FLASH_ATTR Dht::Temperature::Temperature(Dht *parent, int id)
@@ -301,6 +305,11 @@ int ICACHE_FLASH_ATTR Dht::Temperature::get_max_events_count(void)
 
 void ICACHE_FLASH_ATTR Dht::Temperature::force_reading(void (*callback)(void *), void *param)
 {
+    // if the class was not properly allocated exit
+    if ((m_parent->m_timestamp_buffer == NULL) ||
+        (m_parent->m_invalid_buffer == NULL) ||
+        (m_parent->m_temperature_buffer == NULL))
+        return;
     m_parent->m_force_reading_cb = callback;
     m_parent->m_force_reading_param = param;
     m_parent->m_force_reading = true;
@@ -328,6 +337,11 @@ void ICACHE_FLASH_ATTR Dht::Temperature::getEvent(sensors_event_t *event, int id
             index = m_parent->m_max_buffer_size - 1;
         idx--;
     }
+    // if the class was not properly allocated exit
+    if ((m_parent->m_timestamp_buffer == NULL) ||
+        (m_parent->m_invalid_buffer == NULL) ||
+        (m_parent->m_temperature_buffer == NULL))
+        return;
     event->timestamp = m_parent->m_timestamp_buffer[index];
     event->invalid = m_parent->m_invalid_buffer[index];
     switch (m_parent->m_type)
