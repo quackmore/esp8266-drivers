@@ -196,6 +196,7 @@ ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
 
 ICACHE_FLASH_ATTR Max6675::~Max6675()
 {
+    os_timer_disarm(&m_poll_timer);
     if (m_temperature_buffer)
         delete[] m_temperature_buffer;
     if (m_timestamp_buffer)

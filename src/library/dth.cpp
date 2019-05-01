@@ -274,6 +274,7 @@ ICACHE_FLASH_ATTR Dht::Dht(int pin,
 
 ICACHE_FLASH_ATTR Dht::~Dht()
 {
+    os_timer_disarm(&m_poll_timer);
     if (m_dht_in_sequence)
         free_di_seq(m_dht_in_sequence);
     if (m_dht_out_sequence)
