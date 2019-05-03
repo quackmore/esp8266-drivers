@@ -44,7 +44,8 @@ static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
             if (max6675_ptr->m_poll_interval > 0)
                 os_timer_arm(&(max6675_ptr->m_poll_timer), max6675_ptr->m_poll_interval, 1);
             // actually there was no reading but anyway ...
-            max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
+            if (max6675_ptr->m_force_reading_cb)
+                max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
         }
         return;
     }
@@ -70,7 +71,8 @@ static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
         if (max6675_ptr->m_poll_interval > 0)
             os_timer_arm(&(max6675_ptr->m_poll_timer), max6675_ptr->m_poll_interval, 1);
 
-        max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
+        if (max6675_ptr->m_force_reading_cb)
+            max6675_ptr->m_force_reading_cb(max6675_ptr->m_force_reading_param);
     }
 }
 

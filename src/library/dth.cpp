@@ -45,7 +45,8 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
             if (dht_ptr->m_poll_interval > 0)
                 os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
             // actually there was no reading but anyway ...
-            dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
+            if (dht_ptr->m_force_reading_cb)
+                dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
         }
         return;
     }
@@ -153,7 +154,8 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
         if (dht_ptr->m_poll_interval > 0)
             os_timer_arm(&(dht_ptr->m_poll_timer), dht_ptr->m_poll_interval, 1);
 
-        dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
+        if (dht_ptr->m_force_reading_cb)
+            dht_ptr->m_force_reading_cb(dht_ptr->m_force_reading_param);
     }
 }
 
