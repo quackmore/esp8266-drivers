@@ -8,6 +8,7 @@
  */
 
 #include "c_types.h"
+#include "iram.h"
 #include "gpio.h"
 #include "osapi.h"
 #include "mem.h"
@@ -22,7 +23,7 @@
 // sequence definition
 //
 
-struct di_seq *new_di_seq(int pin, int num_pulses, int timeout_val, Di_timeout_unit timeout_unit)
+struct di_seq IRAM *new_di_seq(int pin, int num_pulses, int timeout_val, Di_timeout_unit timeout_unit)
 {
     struct di_seq *seq = (struct di_seq *)call_espbot_zalloc(sizeof(struct di_seq));
     if (seq == NULL)
@@ -40,21 +41,21 @@ struct di_seq *new_di_seq(int pin, int num_pulses, int timeout_val, Di_timeout_u
     return seq;
 }
 
-void free_di_seq(struct di_seq *seq)
+void IRAM free_di_seq(struct di_seq *seq)
 {
     call_espbot_free(seq->pulse_level);
     call_espbot_free(seq->pulse_duration);
     call_espbot_free(seq);
 }
 
-void set_di_seq_cb(struct di_seq *seq, void (*cb)(void *), void *cb_param, CB_call_type cb_call)
+void IRAM set_di_seq_cb(struct di_seq *seq, void (*cb)(void *), void *cb_param, CB_call_type cb_call)
 {
     seq->end_sequence_callack = cb;
     seq->end_sequence_callack_param = cb_param;
     seq->callback_direct = cb_call;
 }
 
-void ICACHE_FLASH_ATTR seq_di_clear(struct di_seq *seq)
+void seq_di_clear(struct di_seq *seq)
 {
     int idx = 0;
     seq->current_pulse = 0;
@@ -65,12 +66,12 @@ void ICACHE_FLASH_ATTR seq_di_clear(struct di_seq *seq)
     }
 }
 
-int ICACHE_FLASH_ATTR get_di_seq_length(struct di_seq *seq)
+int get_di_seq_length(struct di_seq *seq)
 {
     return ((seq->current_pulse - 1));
 }
 
-char ICACHE_FLASH_ATTR get_di_seq_pulse_level(struct di_seq *seq, int idx)
+char get_di_seq_pulse_level(struct di_seq *seq, int idx)
 {
     if (idx < seq->pulse_max_count)
         return seq->pulse_level[idx];
@@ -78,7 +79,7 @@ char ICACHE_FLASH_ATTR get_di_seq_pulse_level(struct di_seq *seq, int idx)
         return -1;
 }
 
-uint32 ICACHE_FLASH_ATTR get_di_seq_pulse_duration(struct di_seq *seq, int idx)
+uint32 get_di_seq_pulse_duration(struct di_seq *seq, int idx)
 {
     if (idx < (seq->pulse_max_count - 1))
         return (seq->pulse_duration[idx + 1] - seq->pulse_duration[idx]);
@@ -90,7 +91,7 @@ uint32 ICACHE_FLASH_ATTR get_di_seq_pulse_duration(struct di_seq *seq, int idx)
 // recording sequence
 //
 
-static void input_pulse(struct di_seq *seq)
+static void IRAM input_pulse(struct di_seq *seq)
 {
     uint32 gpio_status;
 
@@ -121,7 +122,7 @@ static void input_pulse(struct di_seq *seq)
     //                    5-6 us when system_os_post is called
 }
 
-static void ICACHE_FLASH_ATTR input_reading_timeout_ms(struct di_seq *seq)
+static void input_reading_timeout_ms(struct di_seq *seq)
 {
     os_timer_disarm(&(seq->timeout_timer));
     seq->ended_by_timeout = true;
@@ -130,14 +131,14 @@ static void ICACHE_FLASH_ATTR input_reading_timeout_ms(struct di_seq *seq)
 
 static struct di_seq *us_seq;
 
-static void ICACHE_FLASH_ATTR input_reading_timeout_us(void)
+static void input_reading_timeout_us(void)
 {
     hw_timer_disarm();
     us_seq->ended_by_timeout = true;
     system_os_post(USER_TASK_PRIO_2, SIG_DI_SEQ_COMPLETED, (os_param_t)us_seq);
 }
 
-void read_di_sequence(struct di_seq *seq)
+void IRAM read_di_sequence(struct di_seq *seq)
 {
     seq->current_pulse = 0;
     seq->ended_by_timeout = false;
@@ -162,7 +163,7 @@ void read_di_sequence(struct di_seq *seq)
     ETS_GPIO_INTR_ENABLE();
 }
 
-void ICACHE_FLASH_ATTR stop_di_sequence_timeout(struct di_seq *seq)
+void stop_di_sequence_timeout(struct di_seq *seq)
 {
     if (seq->timeout_unit == TIMEOUT_MS)
         os_timer_disarm(&(seq->timeout_timer));

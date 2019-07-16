@@ -24,10 +24,11 @@ extern "C"
 #include "library_di_sequence.h"
 }
 
+#include "iram.h"
 #include "library.hpp"
 #include "library_dht.hpp"
 
-static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
+static void dht_reading_completed(void *param)
 {
     Dht *dht_ptr = (Dht *)param;
     if ((dht_ptr->m_dht_in_sequence)->ended_by_timeout)
@@ -159,7 +160,7 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
     }
 }
 
-static void dht_start_completed(void *param)
+static void IRAM dht_start_completed(void *param)
 {
     Dht *dht_ptr = (Dht *)param;
     // start reading from DHT
@@ -174,7 +175,7 @@ static void dht_start_completed(void *param)
     // free_do_seq(dht_ptr->m_dht_out_sequence);
 }
 
-static void dht_read(Dht *dht_ptr)
+static void IRAM dht_read(Dht *dht_ptr)
 {
     dht_ptr->m_reading_ongoing = true;
     // configure Dx as output and set it High
@@ -210,7 +211,7 @@ static void dht_read(Dht *dht_ptr)
     exe_do_seq_us(dht_ptr->m_dht_out_sequence);
 }
 
-ICACHE_FLASH_ATTR Dht::Dht(int pin,
+Dht::Dht(int pin,
                            Dht_type type,
                            int temperature_id,
                            int humidity_id,
@@ -274,7 +275,7 @@ ICACHE_FLASH_ATTR Dht::Dht(int pin,
         os_timer_arm(&m_poll_timer, m_poll_interval, 1);
 }
 
-ICACHE_FLASH_ATTR Dht::~Dht()
+Dht::~Dht()
 {
     os_timer_disarm(&m_poll_timer);
     if (m_dht_in_sequence)
@@ -291,22 +292,22 @@ ICACHE_FLASH_ATTR Dht::~Dht()
         delete[] m_timestamp_buffer;
 }
 
-ICACHE_FLASH_ATTR Dht::Temperature::Temperature(Dht *parent, int id)
+Dht::Temperature::Temperature(Dht *parent, int id)
 {
     m_parent = parent;
     m_id = id;
 }
 
-ICACHE_FLASH_ATTR Dht::Temperature::~Temperature()
+Dht::Temperature::~Temperature()
 {
 }
 
-int ICACHE_FLASH_ATTR Dht::Temperature::get_max_events_count(void)
+int Dht::Temperature::get_max_events_count(void)
 {
     return m_parent->m_max_buffer_size;
 }
 
-void ICACHE_FLASH_ATTR Dht::Temperature::force_reading(void (*callback)(void *), void *param)
+void Dht::Temperature::force_reading(void (*callback)(void *), void *param)
 {
     // if the class was not properly allocated exit
     if ((m_parent->m_timestamp_buffer == NULL) ||
@@ -326,7 +327,7 @@ void ICACHE_FLASH_ATTR Dht::Temperature::force_reading(void (*callback)(void *),
     }
 }
 
-void ICACHE_FLASH_ATTR Dht::Temperature::getEvent(sensors_event_t *event, int idx)
+void Dht::Temperature::getEvent(sensors_event_t *event, int idx)
 {
     os_memset(event, 0, sizeof(sensors_event_t));
     event->sensor_id = m_id;
@@ -357,7 +358,7 @@ void ICACHE_FLASH_ATTR Dht::Temperature::getEvent(sensors_event_t *event, int id
     }
 }
 
-void ICACHE_FLASH_ATTR Dht::Temperature::getSensor(sensor_t *sensor)
+void Dht::Temperature::getSensor(sensor_t *sensor)
 {
     os_memset(sensor, 0, sizeof(sensor_t));
     sensor->sensor_id = m_id;
@@ -396,22 +397,22 @@ void ICACHE_FLASH_ATTR Dht::Temperature::getSensor(sensor_t *sensor)
     }
 }
 
-ICACHE_FLASH_ATTR Dht::Humidity::Humidity(Dht *parent, int id)
+Dht::Humidity::Humidity(Dht *parent, int id)
 {
     m_parent = parent;
     m_id = id;
 }
 
-ICACHE_FLASH_ATTR Dht::Humidity::~Humidity()
+Dht::Humidity::~Humidity()
 {
 }
 
-int ICACHE_FLASH_ATTR Dht::Humidity::get_max_events_count(void)
+int Dht::Humidity::get_max_events_count(void)
 {
     return m_parent->m_max_buffer_size;
 }
 
-void ICACHE_FLASH_ATTR Dht::Humidity::force_reading(void (*callback)(void *), void *param)
+void Dht::Humidity::force_reading(void (*callback)(void *), void *param)
 {
     m_parent->m_force_reading_cb = callback;
     m_parent->m_force_reading_param = param;
@@ -426,7 +427,7 @@ void ICACHE_FLASH_ATTR Dht::Humidity::force_reading(void (*callback)(void *), vo
     }
 }
 
-void ICACHE_FLASH_ATTR Dht::Humidity::getEvent(sensors_event_t *event, int idx)
+void Dht::Humidity::getEvent(sensors_event_t *event, int idx)
 {
     os_memset(event, 0, sizeof(sensors_event_t));
     event->sensor_id = m_id;
@@ -452,7 +453,7 @@ void ICACHE_FLASH_ATTR Dht::Humidity::getEvent(sensors_event_t *event, int idx)
     }
 }
 
-void ICACHE_FLASH_ATTR Dht::Humidity::getSensor(sensor_t *sensor)
+void Dht::Humidity::getSensor(sensor_t *sensor)
 {
     os_memset(sensor, 0, sizeof(sensor_t));
     sensor->sensor_id = m_id;

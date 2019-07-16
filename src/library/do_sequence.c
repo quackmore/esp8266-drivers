@@ -8,6 +8,7 @@
  */
 
 #include "c_types.h"
+#include "iram.h"
 #include "gpio.h"
 #include "osapi.h"
 #include "mem.h"
@@ -22,7 +23,7 @@
 // sequence definition
 //
 
-struct do_seq *new_do_seq(int pin, int num_pulses)
+struct do_seq IRAM *new_do_seq(int pin, int num_pulses)
 {
     struct do_seq *seq = (struct do_seq *)call_espbot_zalloc(sizeof(struct do_seq));
     if (seq == NULL)
@@ -38,21 +39,21 @@ struct do_seq *new_do_seq(int pin, int num_pulses)
     return seq;
 }
 
-void free_do_seq(struct do_seq *seq)
+void IRAM free_do_seq(struct do_seq *seq)
 {
     call_espbot_free(seq->pulse_level);
     call_espbot_free(seq->pulse_duration);
     call_espbot_free(seq);
 }
 
-void set_do_seq_cb(struct do_seq *seq, void (*cb)(void *), void *cb_param, CB_call_type cb_call)
+void IRAM set_do_seq_cb(struct do_seq *seq, void (*cb)(void *), void *cb_param, CB_call_type cb_call)
 {
     seq->end_sequence_callack = cb;
     seq->end_sequence_callack_param = cb_param;
     seq->callback_direct = cb_call;
 }
 
-void ICACHE_FLASH_ATTR out_seq_clear(struct do_seq *seq)
+void out_seq_clear(struct do_seq *seq)
 {
     int idx = 0;
     seq->pulse_count = 0;
@@ -63,7 +64,7 @@ void ICACHE_FLASH_ATTR out_seq_clear(struct do_seq *seq)
     }
 }
 
-void ICACHE_FLASH_ATTR out_seq_add(struct do_seq *seq, char level, uint32 duration)
+void out_seq_add(struct do_seq *seq, char level, uint32 duration)
 {
     if (seq->pulse_count < seq->pulse_max_count)
     {
@@ -73,12 +74,12 @@ void ICACHE_FLASH_ATTR out_seq_add(struct do_seq *seq, char level, uint32 durati
     }
 }
 
-int ICACHE_FLASH_ATTR get_do_seq_length(struct do_seq *seq)
+int get_do_seq_length(struct do_seq *seq)
 {
     return seq->pulse_count;
 }
 
-char ICACHE_FLASH_ATTR get_do_seq_pulse_level(struct do_seq *seq, int idx)
+char get_do_seq_pulse_level(struct do_seq *seq, int idx)
 {
     if (idx < seq->pulse_max_count)
         return seq->pulse_level[idx];
@@ -86,7 +87,7 @@ char ICACHE_FLASH_ATTR get_do_seq_pulse_level(struct do_seq *seq, int idx)
         return -1;
 }
 
-uint32 ICACHE_FLASH_ATTR get_do_seq_pulse_duration(struct do_seq *seq, int idx)
+uint32 get_do_seq_pulse_duration(struct do_seq *seq, int idx)
 {
     if (idx < seq->pulse_max_count)
         return seq->pulse_duration[idx];
@@ -102,7 +103,7 @@ uint32 ICACHE_FLASH_ATTR get_do_seq_pulse_duration(struct do_seq *seq, int idx)
 // ms pulses (SW timers)
 //
 
-static void output_pulse(struct do_seq *seq)
+static void IRAM output_pulse(struct do_seq *seq)
 {
     if (seq->current_pulse < seq->pulse_max_count)
     {
@@ -125,7 +126,7 @@ static void output_pulse(struct do_seq *seq)
     // during sequence pulse (while the timer is armed)
 }
 
-void ICACHE_FLASH_ATTR exe_do_seq_ms(struct do_seq *seq)
+void exe_do_seq_ms(struct do_seq *seq)
 {
     os_timer_disarm(&(seq->pulse_timer));
     os_timer_setfn(&(seq->pulse_timer), (os_timer_func_t *)output_pulse, seq);
@@ -146,7 +147,7 @@ static int us_do_pin;
 static char *us_pulse_level;
 static uint32 *us_pulse_duration;
 
-static void output_pulse_us(void)
+static void IRAM output_pulse_us(void)
 {
     if (us_current_pulse < us_pulse_max_count)
     {
@@ -172,7 +173,7 @@ static void output_pulse_us(void)
     // the callback will be executed by the task after 50-60 us
 }
 
-void ICACHE_FLASH_ATTR exe_do_seq_us(struct do_seq *seq)
+void exe_do_seq_us(struct do_seq *seq)
 {
     hw_timer_set_func(output_pulse_us);
     hw_timer_init(FRC1_SOURCE, 0);

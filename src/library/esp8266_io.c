@@ -7,11 +7,12 @@
  * ----------------------------------------------------------------------------
  */
 
+#include "iram.h"
 #include "ets_sys.h"
 #include "gpio.h"
 #include "esp8266_io.h"
 
-int gpio_NUM(int idx)
+int IRAM gpio_NUM(int idx)
 {
     switch (idx)
     {
@@ -36,7 +37,7 @@ int gpio_NUM(int idx)
     }
 }
 
-int gpio_MUX(int idx)
+int IRAM gpio_MUX(int idx)
 {
     switch (idx)
     {
@@ -61,7 +62,7 @@ int gpio_MUX(int idx)
     }
 }
 
-int gpio_FUNC(int idx)
+int IRAM gpio_FUNC(int idx)
 {
     switch (idx)
     {

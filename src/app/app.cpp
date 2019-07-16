@@ -30,13 +30,13 @@ extern "C"
 #define APP_RELEASE "Unavailable"
 #endif
 
-char *app_name = "App Example";
+char *app_name = "LibraryTest";
 char *app_release = APP_RELEASE;
 
 Dht *dht22;
 Max6675 *max6675;
 
-void ICACHE_FLASH_ATTR app_init_before_wifi(void)
+void app_init_before_wifi(void)
 {
     init_dio_task();
     dht22 = new Dht(ESPBOT_D2, DHT22, 2000, 3000, 60000, 10);
@@ -46,12 +46,12 @@ void ICACHE_FLASH_ATTR app_init_before_wifi(void)
     // max6675 = new Max6675(ESPBOT_D5, ESPBOT_D6, ESPBOT_D7, 1000, 0, 10);
 }
 
-void ICACHE_FLASH_ATTR app_init_after_wifi(void)
+void app_init_after_wifi(void)
 {
     esp_mDns.start("this_is_the_app_name");
 }
 
-void ICACHE_FLASH_ATTR app_deinit_on_wifi_disconnect()
+void app_deinit_on_wifi_disconnect()
 {
     esp_mDns.stop();
 }

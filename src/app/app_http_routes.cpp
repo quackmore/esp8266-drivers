@@ -28,7 +28,7 @@ extern "C"
 #include "app_test.hpp"
 #include "library.hpp"
 
-bool ICACHE_FLASH_ATTR app_http_routes(struct espconn *ptr_espconn, Html_parsed_req *parsed_req)
+bool app_http_routes(struct espconn *ptr_espconn, Http_parsed_req *parsed_req)
 {
     esplog.all("app_http_routes\n");
 
@@ -61,7 +61,7 @@ bool ICACHE_FLASH_ATTR app_http_routes(struct espconn *ptr_espconn, Html_parsed_
                        system_get_chip_id(),
                        system_get_sdk_version(),
                        system_get_boot_version());
-            response(ptr_espconn, HTTP_OK, HTTP_CONTENT_JSON, msg.ref, true);
+            http_response(ptr_espconn, HTTP_OK, HTTP_CONTENT_JSON, msg.ref, true);
             // esp_free(msg); // dont't free the msg buffer cause it could not have been used yet
         }
         else
@@ -78,19 +78,19 @@ bool ICACHE_FLASH_ATTR app_http_routes(struct espconn *ptr_espconn, Html_parsed_
         {
             if (test_cfg.find_pair("test_number") != JSON_NEW_PAIR_FOUND)
             {
-                response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "Cannot find JSON string 'test_number'", false);
+                http_response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "Cannot find JSON string 'test_number'", false);
                 return true;
             }
             if (test_cfg.get_cur_pair_value_type() != JSON_INTEGER)
             {
-                response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "JSON pair with string 'test_number' does not have a INTEGER value type", false);
+                http_response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "JSON pair with string 'test_number' does not have a INTEGER value type", false);
                 return true;
             }
             Heap_chunk tmp_test_number(test_cfg.get_cur_pair_value_len());
             if (tmp_test_number.ref == NULL)
             {
                 esplog.error("Websvr::webserver_recv - not enough heap memory %d\n", test_cfg.get_cur_pair_value_len() + 1);
-                response(ptr_espconn, HTTP_SERVER_ERROR, HTTP_CONTENT_JSON, "not enough heap memory", false);
+                http_response(ptr_espconn, HTTP_SERVER_ERROR, HTTP_CONTENT_JSON, "not enough heap memory", false);
                 return true;
             }
             os_strncpy(tmp_test_number.ref, test_cfg.get_cur_pair_value(), test_cfg.get_cur_pair_value_len());
@@ -99,14 +99,14 @@ bool ICACHE_FLASH_ATTR app_http_routes(struct espconn *ptr_espconn, Html_parsed_
         }
         else
         {
-            response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "Json bad syntax", false);
+            http_response(ptr_espconn, HTTP_BAD_REQUEST, HTTP_CONTENT_JSON, "Json bad syntax", false);
             return true;
         }
         Heap_chunk msg(36, dont_free);
         if (msg.ref)
         {
             os_sprintf(msg.ref, "{\"test_number\": %d}", test_number);
-            response(ptr_espconn, HTTP_OK, HTTP_CONTENT_TEXT, msg.ref, true);
+            http_response(ptr_espconn, HTTP_OK, HTTP_CONTENT_JSON, msg.ref, true);
             // esp_free(msg); // dont't free the msg buffer cause it could not have been used yet
             run_test(test_number);
         }

@@ -18,7 +18,7 @@ extern "C"
 #include "library.hpp"
 #include "library_max6675.hpp"
 
-static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
+static void max6675_read_completed(Max6675 *max6675_ptr)
 {
     int cur_pos;
     if (max6675_ptr->m_buffer_idx == (max6675_ptr->m_max_buffer_size - 1))
@@ -76,7 +76,7 @@ static void ICACHE_FLASH_ATTR max6675_read_completed(Max6675 *max6675_ptr)
     }
 }
 
-static void ICACHE_FLASH_ATTR max6675_read_bit(void *param)
+static void max6675_read_bit(void *param)
 {
     Max6675 *max6675_ptr = (Max6675 *)param;
 
@@ -119,7 +119,7 @@ static void ICACHE_FLASH_ATTR max6675_read_bit(void *param)
     }
 }
 
-static void ICACHE_FLASH_ATTR max6675_read(Max6675 *max6675_ptr)
+static void max6675_read(Max6675 *max6675_ptr)
 {
     max6675_ptr->m_reading_ongoing = true;
     // configure CS as output and set it LOW
@@ -140,7 +140,7 @@ static void ICACHE_FLASH_ATTR max6675_read(Max6675 *max6675_ptr)
     os_timer_arm(&(max6675_ptr->m_read_timer), 5, 0);
 }
 
-ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
+Max6675::Max6675(int cs_pin,
                                    int sck_pin,
                                    int so_pin,
                                    int id,
@@ -196,7 +196,7 @@ ICACHE_FLASH_ATTR Max6675::Max6675(int cs_pin,
         os_timer_arm(&m_poll_timer, m_poll_interval, 1);
 }
 
-ICACHE_FLASH_ATTR Max6675::~Max6675()
+Max6675::~Max6675()
 {
     os_timer_disarm(&m_poll_timer);
     if (m_temperature_buffer)
@@ -207,12 +207,12 @@ ICACHE_FLASH_ATTR Max6675::~Max6675()
         delete[] m_invalid_buffer;
 }
 
-int ICACHE_FLASH_ATTR Max6675::get_max_events_count(void)
+int Max6675::get_max_events_count(void)
 {
     return m_max_buffer_size;
 }
 
-void ICACHE_FLASH_ATTR Max6675::force_reading(void (*callback)(void *), void *param)
+void Max6675::force_reading(void (*callback)(void *), void *param)
 {
     // if the class was not properly allocated exit
     if ((m_timestamp_buffer == NULL) ||
@@ -232,7 +232,7 @@ void ICACHE_FLASH_ATTR Max6675::force_reading(void (*callback)(void *), void *pa
     }
 }
 
-void ICACHE_FLASH_ATTR Max6675::getEvent(sensors_event_t *event, int idx)
+void Max6675::getEvent(sensors_event_t *event, int idx)
 {
     os_memset(event, 0, sizeof(sensors_event_t));
     event->sensor_id = m_id;
@@ -254,7 +254,7 @@ void ICACHE_FLASH_ATTR Max6675::getEvent(sensors_event_t *event, int idx)
     event->temperature = ((float)m_temperature_buffer[index] / 4);
 }
 
-void ICACHE_FLASH_ATTR Max6675::getSensor(sensor_t *sensor)
+void Max6675::getSensor(sensor_t *sensor)
 {
     os_memset(sensor, 0, sizeof(sensor_t));
     os_strncpy(sensor->name, "MAX6675", 7);

@@ -20,6 +20,7 @@ extern "C"
 #include "gpio.h"
 }
 
+#include "iram.h"
 #include "app.hpp"
 #include "app_test.hpp"
 #include "espbot_global.hpp"
@@ -31,14 +32,14 @@ extern "C"
 
 extern "C" char *f2str(char *str, float value, int decimals);
 
-static void ICACHE_FLASH_ATTR output_seq_completed(void *param)
+static void output_seq_completed(void *param)
 {
     struct do_seq *seq = (struct do_seq *)param;
     free_do_seq(seq);
     os_printf("Test completed\n");
 }
 
-static void ICACHE_FLASH_ATTR input_seq_completed(void *param)
+static void input_seq_completed(void *param)
 {
     struct di_seq *seq = (struct di_seq *)param;
     if (seq->ended_by_timeout)
@@ -68,7 +69,7 @@ uint32 start_time;
 uint32 end_time;
 static di_seq *dht_input;
 
-static void ICACHE_FLASH_ATTR print_sensor(sensor_t *sensor)
+static void print_sensor(sensor_t *sensor)
 {
     Heap_chunk str(20);
     os_printf("         SENSOR\n");
@@ -81,39 +82,42 @@ static void ICACHE_FLASH_ATTR print_sensor(sensor_t *sensor)
     os_printf("===>  min delay: %d\n", sensor->min_delay);
 }
 
-static void ICACHE_FLASH_ATTR print_event(sensors_event_t *event, int decimals)
+static void print_event(sensors_event_t *event, int decimals)
 {
     Heap_chunk str(20);
     os_printf("          EVENT\n");
     os_printf("==>   sensor id: %d\n", event->sensor_id);
     os_printf("==> sensor type: %d\n", event->type);
     os_printf("==>     invalid: %d\n", event->invalid);
-    os_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
+    if (event->type == SENSOR_TYPE_TEMPERATURE)
+        os_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
+    else
+        os_printf("==> humidity   : %s\n", f2str(str.ref, event->relative_humidity, decimals));
     os_printf("==>   timestamp: %s\n", esp_sntp.get_timestr(event->timestamp));
 }
 
-static void ICACHE_FLASH_ATTR get_and_print_max6675_event(void *param)
+static void get_and_print_max6675_event(void *param)
 {
     sensors_event_t event;
     max6675->getEvent(&event);
     print_event(&event, 2);
 }
 
-static void ICACHE_FLASH_ATTR get_and_print_dht22_temperature_event(void *param)
+static void get_and_print_dht22_temperature_event(void *param)
 {
     sensors_event_t event;
     dht22->temperature.getEvent(&event);
     print_event(&event, 1);
 }
 
-static void ICACHE_FLASH_ATTR get_and_print_dht22_humidity_event(void *param)
+static void get_and_print_dht22_humidity_event(void *param)
 {
     sensors_event_t event;
     dht22->humidity.getEvent(&event);
     print_event(&event, 1);
 }
 
-static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
+static void dht_reading_completed(void *param)
 {
     struct di_seq *seq = (struct di_seq *)param;
     os_printf("start DHT -> start reading = %d\n", (end_time - start_time));
@@ -140,7 +144,7 @@ static void ICACHE_FLASH_ATTR dht_reading_completed(void *param)
     free_di_seq(seq);
 }
 
-static void dht_start_completed(void *param)
+static void IRAM dht_start_completed(void *param)
 {
     struct do_seq *seq = (struct do_seq *)param;
     // start reading from DHT
@@ -154,7 +158,7 @@ static void dht_start_completed(void *param)
     free_do_seq(seq);
 }
 
-void ICACHE_FLASH_ATTR run_test(int idx)
+void run_test(int idx)
 {
     struct do_seq *seq;
     switch (idx)

@@ -24,7 +24,7 @@ static os_event_t *dio_queue;
 // (that could be an isr function when hw timer is used)
 //
 
-static void ICACHE_FLASH_ATTR dio_task(os_event_t *e)
+static void dio_task(os_event_t *e)
 {
     switch (e->sig)
     {
@@ -45,7 +45,7 @@ static void ICACHE_FLASH_ATTR dio_task(os_event_t *e)
     }
 }
 
-void ICACHE_FLASH_ATTR init_dio_task(void)
+void init_dio_task(void)
 {
     dio_queue = (os_event_t *)call_espbot_zalloc(sizeof(os_event_t) * DIO_TASK_QUEUE_LEN);
     system_os_task(dio_task, USER_TASK_PRIO_2, dio_queue, DIO_TASK_QUEUE_LEN);
