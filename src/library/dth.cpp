@@ -28,6 +28,10 @@ extern "C"
 #include "library.hpp"
 #include "library_dht.hpp"
 
+// DEBUG PROFILING
+// static uint32 dht_start_sequence;
+// static uint32 dht_start_sequence_completed;
+
 static void dht_reading_completed(void *param)
 {
     Dht *dht_ptr = (Dht *)param;
@@ -143,6 +147,10 @@ static void dht_reading_completed(void *param)
         else
             dht_ptr->m_buffer_idx++;
         seq_di_clear(dht_ptr->m_dht_in_sequence);
+        // DEBUG
+        // os_printf("DHT starting sequence took %d us\n", (dht_start_sequence_completed - dht_start_sequence));
+        // os_printf("DHT temperature: %d\n", dht_ptr->m_temperature_buffer[cur_pos]);
+        // os_printf("DHT humidity   : %d\n", dht_ptr->m_humidity_buffer[cur_pos]);
     }
     // done with reading
     dht_ptr->m_reading_ongoing = false;
@@ -162,6 +170,8 @@ static void dht_reading_completed(void *param)
 
 static void IRAM dht_start_completed(void *param)
 {
+    // DEBUG
+    // dht_start_sequence_completed = system_get_time();
     Dht *dht_ptr = (Dht *)param;
     // start reading from DHT
     // configure Dx as input and set pullup
@@ -199,7 +209,7 @@ static void IRAM dht_read(Dht *dht_ptr)
     // prepare input sequence (82 pulses)
     if (!dht_ptr->m_dht_in_sequence)
     {
-        dht_ptr->m_dht_in_sequence = new_di_seq(ESPBOT_D2_NUM, 82, 100, TIMEOUT_MS);
+        dht_ptr->m_dht_in_sequence = new_di_seq(gpio_NUM(dht_ptr->m_pin), 82, 100, TIMEOUT_MS);
         if (dht_ptr->m_dht_in_sequence == NULL)
         {
             PRINT_ERROR("DHT [D%d] not enough heap memory\n");
@@ -208,15 +218,17 @@ static void IRAM dht_read(Dht *dht_ptr)
         set_di_seq_cb(dht_ptr->m_dht_in_sequence, dht_reading_completed, (void *)dht_ptr, task);
     }
     // Send start sequence
+    // DEBUG
+    // dht_start_sequence = system_get_time();
     exe_do_seq_us(dht_ptr->m_dht_out_sequence);
 }
 
 Dht::Dht(int pin,
-                           Dht_type type,
-                           int temperature_id,
-                           int humidity_id,
-                           int poll_interval,
-                           int buffer_length)
+         Dht_type type,
+         int temperature_id,
+         int humidity_id,
+         int poll_interval,
+         int buffer_length)
     : temperature(this, temperature_id),
       humidity(this, humidity_id)
 {
