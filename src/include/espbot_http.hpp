@@ -26,6 +26,7 @@ extern "C"
 #define HTTP_UNAUTHORIZED 401
 #define HTTP_FORBIDDEN 403
 #define HTTP_NOT_FOUND 404
+#define HTTP_CONFLICT 409
 #define HTTP_SERVER_ERROR 500
 
 #define HTTP_CONTENT_TEXT "text/html"
@@ -83,7 +84,7 @@ public:
 };
 
 // parse_request takes the incoming string req and fill in parsed_req
-void http_parse_request(char *req, Http_parsed_req *parsed_req);
+void http_parse_request(char *req, unsigned short length, Http_parsed_req *parsed_req);
 
 // espconn_send custom callback
 void http_sentcb(void *arg);
@@ -124,6 +125,7 @@ struct http_send
 {
   struct espconn *p_espconn;
   char *msg;
+  int msg_len;
 };
 
 struct http_split_send
@@ -143,7 +145,7 @@ void http_check_pending_send(void);
 // quick format an http response and send it
 //    free_msg must be false when passing a "string" allocated into text or data segment
 //    free_msg must be true when passing an heap allocated string
-void http_response(struct espconn *p_espconn, int code, char *content_type, char *msg, bool free_msg);
+void http_response(struct espconn *p_espconn, int code, char *content_type, const char *msg, bool free_msg);
 
 // format header string
 char *http_format_header(class Http_header *);
@@ -153,10 +155,10 @@ char *http_format_header(class Http_header *);
 // http_send will take care of splitting the message according to the buffer size
 // and will repeadetely call http_send_buffer
 // will free the msg buffer after it has been sent (msg must be allocated on heap)
-void http_send(struct espconn *p_espconn, char *msg);
+void http_send(struct espconn *p_espconn, char *msg, int msg_len);
 
 // http_send_buffer will manage calling espconn_send avoiding new calls before completion
-void http_send_buffer(struct espconn *p_espconn, char *msg);
+void http_send_buffer(struct espconn *p_espconn, char *msg, int msg_len);
 
 //
 // incoming response for a client
@@ -181,7 +183,7 @@ public:
 };
 
 // parse_response takes the incoming string response and fill in parsed_response
-void http_parse_response(char *response, Http_parsed_response *parsed_response);
+void http_parse_response(char *response, int length, Http_parsed_response *parsed_response);
 
 // http responses can come in split into different messages
 // if that is the case then the incomplete messages are queued
@@ -191,7 +193,11 @@ void http_save_pending_response(struct espconn *p_espconn, char *precdata, unsig
 // will check for pending responses on p_espconn
 // will add the new message part new_msg
 // will call msg_complete function one the message is complete
-void http_check_pending_responses(struct espconn *p_espconn, char *new_msg, void (*msg_complete)(void *, char *, unsigned short ));
+void http_check_pending_responses(struct espconn *p_espconn, char *new_msg, int length, void (*msg_complete)(void *, char *, unsigned short ));
+
+//
+//
+void clean_pending_responses(struct espconn *p_espconn);
 
 //
 // init and clear http data structures

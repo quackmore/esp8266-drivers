@@ -19,6 +19,11 @@ extern "C"
 #define SIG_SOFTAPMODE_STACONNECTED 2
 #define SIG_SOFTAPMODE_STADISCONNECTED 3
 #define SIG_HTTP_CHECK_PENDING_RESPONSE 4
+#define SIG_NEXT_FUNCTION 5
+
+// execute a function from a task
+void subsequent_function(void (*fun)(void));
+
 
 #define ESP_REBOOT 0
 #define ESP_OTA_REBOOT 1
@@ -26,16 +31,19 @@ extern "C"
 class Espbot
 {
 private:
-  char m_name[32];
+  char _name[33];
+  bool _mdns_enabled;
   // espbot task
   static const int QUEUE_LEN = 8;
-  os_event_t *m_queue;
+  os_event_t *_queue;
+
+  // REPLACED BY A CRON JOB (2020-02-17)
   // heartbeat timer
-  static const int HEARTBEAT_PERIOD = 60000;
-  os_timer_t m_heartbeat;
+  // static const int HEARTBEAT_PERIOD = 60000;
+  // os_timer_t _heartbeat;
 
   int restore_cfg(void);          // return CFG_OK on success, otherwise CFG_ERROR
-  int saved_cfg_not_update(void); // return CFG_OK when cfg does not require update
+  int saved_cfg_not_updated(void); // return CFG_OK when cfg does not require update
                                   // return CFG_REQUIRES_UPDATE when cfg require update
                                   // return CFG_ERROR otherwise
   int save_cfg(void);             // return CFG_OK on success, otherwise CFG_ERROR

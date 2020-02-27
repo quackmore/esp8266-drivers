@@ -7,7 +7,7 @@
  * ----------------------------------------------------------------------------
  */
 
-#include "iram.h"
+#include "espbot_mem_macros.h"
 #include "ets_sys.h"
 #include "gpio.h"
 #include "esp8266_io.h"

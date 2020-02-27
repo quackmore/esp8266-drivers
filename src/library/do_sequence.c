@@ -8,10 +8,10 @@
  */
 
 #include "c_types.h"
-#include "iram.h"
 #include "gpio.h"
 #include "osapi.h"
 #include "mem.h"
+#include "espbot_mem_macros.h"
 #include "user_interface.h"
 #include "driver_hw_timer.h"
 #include "esp8266_io.h"

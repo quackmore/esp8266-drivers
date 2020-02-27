@@ -20,11 +20,10 @@ extern "C"
 #include "gpio.h"
 }
 
-#include "iram.h"
 #include "app.hpp"
 #include "app_test.hpp"
 #include "espbot_global.hpp"
-#include "espbot_debug.hpp"
+#include "espbot_mem_macros.h"
 #include "espbot_utils.hpp"
 #include "library.hpp"
 
@@ -36,31 +35,31 @@ static void output_seq_completed(void *param)
 {
     struct do_seq *seq = (struct do_seq *)param;
     free_do_seq(seq);
-    os_printf("Test completed\n");
+    fs_printf("Test completed\n");
 }
 
 static void input_seq_completed(void *param)
 {
     struct di_seq *seq = (struct di_seq *)param;
     if (seq->ended_by_timeout)
-        os_printf("Input sequence reading ended by timeout timer\n");
+        fs_printf("Input sequence reading ended by timeout timer\n");
     else
-        os_printf("Input sequence reading completed\n");
+        fs_printf("Input sequence reading completed\n");
     {
         int idx = 0;
         char level;
         uint32 duration;
-        os_printf("Sequence acquired:\n");
+        fs_printf("Sequence acquired:\n");
         for (idx = 0; idx < get_di_seq_length(seq); idx++)
         {
             level = get_di_seq_pulse_level(seq, idx);
             duration = get_di_seq_pulse_duration(seq, idx);
             if (level == ESPBOT_LOW)
-                os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
             else
-                os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
         }
-        os_printf("Sequence end.\n");
+        fs_printf("Sequence end.\n");
     }
     free_di_seq(seq);
 }
@@ -72,28 +71,28 @@ static di_seq *dht_input;
 static void print_sensor(sensor_t *sensor)
 {
     Heap_chunk str(20);
-    os_printf("         SENSOR\n");
-    os_printf("===>       name: %s\n", sensor->name);
-    os_printf("===>         id: %d\n", sensor->sensor_id);
-    os_printf("===>       type: %d\n", sensor->type);
-    os_printf("===>  max value: %s\n", f2str(str.ref, sensor->max_value, 2));
-    os_printf("===>  min value: %s\n", f2str(str.ref, sensor->min_value, 2));
-    os_printf("===> resolution: %s\n", f2str(str.ref, sensor->resolution, 2));
-    os_printf("===>  min delay: %d\n", sensor->min_delay);
+    fs_printf("         SENSOR\n");
+    fs_printf("===>       name: %s\n", sensor->name);
+    fs_printf("===>         id: %d\n", sensor->sensor_id);
+    fs_printf("===>       type: %d\n", sensor->type);
+    fs_printf("===>  max value: %s\n", f2str(str.ref, sensor->max_value, 2));
+    fs_printf("===>  min value: %s\n", f2str(str.ref, sensor->min_value, 2));
+    fs_printf("===> resolution: %s\n", f2str(str.ref, sensor->resolution, 2));
+    fs_printf("===>  min delay: %d\n", sensor->min_delay);
 }
 
 static void print_event(sensors_event_t *event, int decimals)
 {
     Heap_chunk str(20);
-    os_printf("          EVENT\n");
-    os_printf("==>   sensor id: %d\n", event->sensor_id);
-    os_printf("==> sensor type: %d\n", event->type);
-    os_printf("==>     invalid: %d\n", event->invalid);
+    fs_printf("          EVENT\n");
+    fs_printf("==>   sensor id: %d\n", event->sensor_id);
+    fs_printf("==> sensor type: %d\n", event->type);
+    fs_printf("==>     invalid: %d\n", event->invalid);
     if (event->type == SENSOR_TYPE_TEMPERATURE)
-        os_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
+        fs_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
     else
-        os_printf("==> humidity   : %s\n", f2str(str.ref, event->relative_humidity, decimals));
-    os_printf("==>   timestamp: %s\n", esp_sntp.get_timestr(event->timestamp));
+        fs_printf("==> humidity   : %s\n", f2str(str.ref, event->relative_humidity, decimals));
+    fs_printf("==>   timestamp: %s\n", esp_time.get_timestr(event->timestamp));
 }
 
 static void get_and_print_max6675_event(void *param)
@@ -120,26 +119,26 @@ static void get_and_print_dht22_humidity_event(void *param)
 static void dht_reading_completed(void *param)
 {
     struct di_seq *seq = (struct di_seq *)param;
-    os_printf("start DHT -> start reading = %d\n", (end_time - start_time));
+    fs_printf("start DHT -> start reading = %d\n", (end_time - start_time));
     if (seq->ended_by_timeout)
-        os_printf("DHT reading ended by timeout timer\n");
+        fs_printf("DHT reading ended by timeout timer\n");
     else
-        os_printf("DHT reading completed\n");
+        fs_printf("DHT reading completed\n");
     {
         int idx = 0;
         char level;
         uint32 duration;
-        os_printf("DHT sequence acquired:\n");
+        fs_printf("DHT sequence acquired:\n");
         for (idx = 0; idx < get_di_seq_length(seq); idx++)
         {
             level = get_di_seq_pulse_level(seq, idx);
             duration = get_di_seq_pulse_duration(seq, idx);
             if (level == ESPBOT_LOW)
-                os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
             else
-                os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
         }
-        os_printf("DHT sequence end.\n");
+        fs_printf("DHT sequence end.\n");
     }
     free_di_seq(seq);
 }
@@ -176,17 +175,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_ms(seq);
     }
@@ -212,17 +211,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_ms(seq);
     }
@@ -249,17 +248,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         // sequence 2
         struct do_seq *seq_2;
@@ -281,17 +280,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq_2); idx++)
             {
                 level = get_do_seq_pulse_level(seq_2, idx);
                 duration = get_do_seq_pulse_duration(seq_2, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_ms(seq);
         exe_do_seq_ms(seq_2);
@@ -318,17 +317,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_ms(seq);
     }
@@ -354,17 +353,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_us(seq);
     }
@@ -401,17 +400,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_us(seq);
     }
@@ -447,17 +446,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         read_di_sequence(input_seq);
         exe_do_seq_ms(seq);
@@ -495,17 +494,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         exe_do_seq_us(seq);
     }
@@ -541,17 +540,17 @@ void run_test(int idx)
             int idx = 0;
             char level;
             uint32 duration;
-            os_printf("Sequence defined as:\n");
+            fs_printf("Sequence defined as:\n");
             for (idx = 0; idx < get_do_seq_length(seq); idx++)
             {
                 level = get_do_seq_pulse_level(seq, idx);
                 duration = get_do_seq_pulse_duration(seq, idx);
                 if (level == ESPBOT_LOW)
-                    os_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level  'LOW' - duration %d\n", idx, duration);
                 else
-                    os_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
+                    fs_printf("pulse %d: level 'HIGH' - duration %d\n", idx, duration);
             }
-            os_printf("Sequence end.\n");
+            fs_printf("Sequence end.\n");
         }
         read_di_sequence(input_seq);
         exe_do_seq_ms(seq);
@@ -580,106 +579,106 @@ void run_test(int idx)
         //    {
         //        // Dht class test
         //        int idx;
-        //        os_printf("DHT22 samples\n");
+        //        fs_printf("DHT22 samples\n");
         //        for (idx = 0; idx < 30; idx++)
         //        {
         //            if (dht22.get_invalid(idx))
-        //                os_printf("--- %d (invalid) %d %d %s",
+        //                fs_printf("--- %d (invalid) %d %d %s",
         //                          idx,
         //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
         //                          (int)(dht22.get_humidity(idx) * 10),
-        //                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
+        //                          esp_time.get_timestr(dht22.get_timestamp(idx)));
         //            else
-        //                os_printf("--- %d           %d %d %s",
+        //                fs_printf("--- %d           %d %d %s",
         //                          idx,
         //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
         //                          (int)(dht22.get_humidity(idx) * 10),
-        //                          esp_sntp.get_timestr(dht22.get_timestamp(idx)));
+        //                          esp_time.get_timestr(dht22.get_timestamp(idx)));
         //        }
-        //        os_printf("DHT22 end\n");
+        //        fs_printf("DHT22 end\n");
         //    }
         //    break;
         //    case 12:
         //    {
         //        // Dht class test
-        //        os_printf("Latest DHT22 reading\n");
+        //        fs_printf("Latest DHT22 reading\n");
         //        if (dht22.get_invalid())
-        //            os_printf("--- (invalid) %d %d %s",
+        //            fs_printf("--- (invalid) %d %d %s",
         //                      (int)(dht22.get_temperature(Celsius) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //                      esp_time.get_timestr(dht22.get_timestamp()));
         //        else
-        //            os_printf("---           %d %d %s",
+        //            fs_printf("---           %d %d %s",
         //                      (int)(dht22.get_temperature(Celsius) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //                      esp_time.get_timestr(dht22.get_timestamp()));
         //    }
         //    break;
         //    case 13:
         //    {
         //        // Dht class test
-        //        os_printf("Latest DHT22 reading\n");
+        //        fs_printf("Latest DHT22 reading\n");
         //        if (dht22.get_invalid())
-        //            os_printf("--- (invalid) %d %d %s",
+        //            fs_printf("--- (invalid) %d %d %s",
         //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //                      esp_time.get_timestr(dht22.get_timestamp()));
         //        else
-        //            os_printf("---           %d %d %s",
+        //            fs_printf("---           %d %d %s",
         //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_sntp.get_timestr(dht22.get_timestamp()));
+        //                      esp_time.get_timestr(dht22.get_timestamp()));
         //    }
         //    break;
         //    case 14:
         //    {
         //        // Max6675 class test
         //        int idx;
-        //        os_printf("Max6675 samples\n");
+        //        fs_printf("Max6675 samples\n");
         //        for (idx = 0; idx < 30; idx++)
         //        {
         //            if (max6675.get_invalid(idx))
-        //                os_printf("--- %d (invalid) %d %s",
+        //                fs_printf("--- %d (invalid) %d %s",
         //                          idx,
         //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //                          esp_time.get_timestr(max6675.get_timestamp(idx)));
         //            else
-        //                os_printf("--- %d           %d %s",
+        //                fs_printf("--- %d           %d %s",
         //                          idx,
         //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                          esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //                          esp_time.get_timestr(max6675.get_timestamp(idx)));
         //        }
-        //        os_printf("Max6675 end\n");
+        //        fs_printf("Max6675 end\n");
         //    }
         //    break;
         //    case 15:
         //    {
         //        // Dht class test
-        //        os_printf("Latest Max6675 reading\n");
+        //        fs_printf("Latest Max6675 reading\n");
         //        if (max6675.get_invalid())
-        //            os_printf("--- %d (invalid) %d %s",
+        //            fs_printf("--- %d (invalid) %d %s",
         //                      idx,
         //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //                      esp_time.get_timestr(max6675.get_timestamp(idx)));
         //        else
-        //            os_printf("---           %d %s",
+        //            fs_printf("---           %d %s",
         //                      (int)(max6675.get_temperature(Celsius) * 100),
-        //                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        //                      esp_time.get_timestr(max6675.get_timestamp()));
         //    }
         //    break;
         //    case 16:
         //    {
         //        // Dht class test
-        //        os_printf("Latest Max6675 reading\n");
+        //        fs_printf("Latest Max6675 reading\n");
         //        if (max6675.get_invalid())
-        //            os_printf("--- %d (invalid) %d %s",
+        //            fs_printf("--- %d (invalid) %d %s",
         //                      idx,
         //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                      esp_sntp.get_timestr(max6675.get_timestamp(idx)));
+        //                      esp_time.get_timestr(max6675.get_timestamp(idx)));
         //        else
-        //            os_printf("---           %d %s",
+        //            fs_printf("---           %d %s",
         //                      (int)(max6675.get_temperature(Fahrenheit) * 100),
-        //                      esp_sntp.get_timestr(max6675.get_timestamp()));
+        //                      esp_time.get_timestr(max6675.get_timestamp()));
         //    }
         //    break;
     case 17:

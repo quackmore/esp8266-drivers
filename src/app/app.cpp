@@ -48,10 +48,8 @@ void app_init_before_wifi(void)
 
 void app_init_after_wifi(void)
 {
-    esp_mDns.start("this_is_the_app_name");
 }
 
 void app_deinit_on_wifi_disconnect()
 {
-    esp_mDns.stop();
 }

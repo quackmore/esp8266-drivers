@@ -6,27 +6,15 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
+#ifndef __RTC_MEM_MAP_H__
+#define __RTC_MEM_MAP_H__
 
-#ifndef __SNTP_HPP__
-#define __SNTP_HPP__
+#include "espbot_timedate.h"
 
-extern "C"
-{
-#include "c_types.h"
-}
-
-class Sntp
-{
-private:
-
-public:
-  Sntp(){};
-  ~Sntp(){};
-
-  void start(void);
-  void stop(void);
-  uint32 get_timestamp();
-  char *get_timestr(uint32);
-};
+// espbot RTC mem usage
+#define RTC_MEM_START 64
+#define RTC_TIMEDATE (RTC_MEM_START)
+// end of espbot RTC mem usage
+#define RTC_FREE (RTC_TIMEDATE + sizeof(struct espbot_time))
 
 #endif

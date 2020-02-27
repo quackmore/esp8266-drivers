@@ -10,28 +10,6 @@
 #ifndef __QUEUE_HPP__
 #define __QUEUE_HPP__
 
-#ifdef ESPBOT
-
-#define PRINT_FATAL(...) esplog.fatal(__VA_ARGS__)
-#define PRINT_ERROR(...) esplog.error(__VA_ARGS__)
-#define PRINT_WARN(...) esplog.warn(__VA_ARGS__)
-#define PRINT_INFO(...) esplog.info(__VA_ARGS__)
-#define PRINT_DEBUG(...) esplog.debug(__VA_ARGS__)
-#define PRINT_TRACE(...) esplog.trace(__VA_ARGS__)
-#define PRINT_ALL(...) esplog.all(__VA_ARGS__)
-
-#else
-
-#define PRINT_FATAL(...) printf(__VA_ARGS__)
-#define PRINT_ERROR(...) printf(__VA_ARGS__)
-#define PRINT_WARN(...) printf(__VA_ARGS__)
-#define PRINT_INFO(...) printf(__VA_ARGS__)
-#define PRINT_DEBUG(...) printf(__VA_ARGS__)
-#define PRINT_TRACE(...) printf(__VA_ARGS__)
-#define PRINT_ALL(...) printf(__VA_ARGS__)
-
-#endif
-
 typedef enum
 {
   Queue_ok = 0,
@@ -62,7 +40,7 @@ private:
 };
 
 template <class T>
-inline Queue<T>::Queue(int max_size)
+Queue<T>::Queue(int max_size)
 {
   m_max_size = max_size;
   m_size = 0;
@@ -76,14 +54,14 @@ inline Queue<T>::Queue(int max_size)
 }
 
 template <class T>
-inline Queue<T>::~Queue()
+Queue<T>::~Queue()
 {
   if (m_content)
     delete[] m_content;
 }
 
 template <class T>
-bool inline Queue<T>::empty()
+bool Queue<T>::empty()
 {
   if (m_size == 0)
     return true;
@@ -92,7 +70,7 @@ bool inline Queue<T>::empty()
 }
 
 template <class T>
-bool inline Queue<T>::full()
+bool Queue<T>::full()
 {
   if (m_size == m_max_size)
     return true;
@@ -101,13 +79,13 @@ bool inline Queue<T>::full()
 }
 
 template <class T>
-int inline Queue<T>::size()
+int Queue<T>::size()
 {
   return m_size;
 }
 
 template <class T>
-inline T *Queue<T>::front()
+T *Queue<T>::front()
 {
   if (m_size)
     return m_content[m_front];
@@ -116,7 +94,7 @@ inline T *Queue<T>::front()
 }
 
 template <class T>
-inline T *Queue<T>::back()
+T *Queue<T>::back()
 {
   if (m_size)
     return m_content[m_back];
@@ -125,7 +103,7 @@ inline T *Queue<T>::back()
 }
 
 template <class T>
-inline Queue_err Queue<T>::push(T *elem)
+Queue_err Queue<T>::push(T *elem)
 {
   if ((m_size == m_max_size) || (m_content == NULL))
     return Queue_full;
@@ -141,7 +119,7 @@ inline Queue_err Queue<T>::push(T *elem)
 }
 
 template <class T>
-inline Queue_err Queue<T>::pop()
+Queue_err Queue<T>::pop()
 {
   if (m_size == 0)
     return Queue_empty;
