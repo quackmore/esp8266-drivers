@@ -11,11 +11,10 @@
 
 #include "c_types.h"
 
+
 // these are espbot_2.0 memory management methods
 // https://github.com/quackmore/espbot_2.0
 void *call_espbot_zalloc(size_t size);
 void call_espbot_free(void *addr);
-
-#define getTimestamp() esp_sntp.get_timestamp()
 
 #endif

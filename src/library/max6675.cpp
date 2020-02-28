@@ -35,9 +35,20 @@ static void max6675_read_completed(Max6675 *max6675_ptr)
     {
         esp_diag.error(MAX6675_THERMOCOUPLE_DISCONNECTED, (max6675_ptr->_so));
         ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] thermocouple disconnected\n",
-               max6675_ptr->_cs,
-               max6675_ptr->_sck,
-               max6675_ptr->_so);
+              max6675_ptr->_cs,
+              max6675_ptr->_sck,
+              max6675_ptr->_so);
+        // set the value as invalid
+        max6675_ptr->_invalid_buffer[cur_pos] = true;
+        // set the timestamp
+        max6675_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+        // set the temperature to 0
+        max6675_ptr->_temperature_buffer[cur_pos] = 0;
+        // update the buffer position
+        if (max6675_ptr->_buffer_idx == (max6675_ptr->_max_buffer_size - 1))
+            max6675_ptr->_buffer_idx = 0;
+        else
+            max6675_ptr->_buffer_idx++;
         // done with reading
         max6675_ptr->_reading_ongoing = false;
         // still something to do if it was a force reading
@@ -146,11 +157,11 @@ static void max6675_read(Max6675 *max6675_ptr)
 }
 
 Max6675::Max6675(int cs_pin,
-                                   int sck_pin,
-                                   int so_pin,
-                                   int id,
-                                   int poll_interval,
-                                   int buffer_length)
+                 int sck_pin,
+                 int so_pin,
+                 int id,
+                 int poll_interval,
+                 int buffer_length)
 {
     // init variables
     int idx;

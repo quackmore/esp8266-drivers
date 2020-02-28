@@ -43,6 +43,23 @@ static void dht_reading_completed(void *param)
         esp_diag.error(DHT_READING_TIMEOUT, (dht_ptr->_dht_in_sequence)->current_pulse);
         ERROR("dht reading timeout D%d %d samples acquired", dht_ptr->_pin, (dht_ptr->_dht_in_sequence)->current_pulse);
         seq_di_clear(dht_ptr->_dht_in_sequence);
+        // calculate buffer position
+        // don't update the buffer position, someone could be reading ...
+        int cur_pos;
+        if (dht_ptr->_buffer_idx == (dht_ptr->_max_buffer_size - 1))
+            cur_pos = 0;
+        else
+            cur_pos = dht_ptr->_buffer_idx + 1;
+        // insert an invalid event
+        dht_ptr->_invalid_buffer[cur_pos] = true;
+        dht_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+        dht_ptr->_temperature_buffer[cur_pos] = 0;
+        dht_ptr->_humidity_buffer[cur_pos] = 0;
+        // update the buffer position
+        if (dht_ptr->_buffer_idx == (dht_ptr->_max_buffer_size - 1))
+            dht_ptr->_buffer_idx = 0;
+        else
+            dht_ptr->_buffer_idx++;
         // done with reading
         dht_ptr->_reading_ongoing = false;
         // still something to do if it was a force reading

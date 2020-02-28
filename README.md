@@ -3,8 +3,23 @@
 ## Summary
 
 Library for ESP8266 digital I/O and compatible sensors.
-Based on Espressif NON-OS SDK.
-No other dependencies.
+Based on Espressif NON-OS SDK (<https://github.com/espressif/ESP8266_NONOS_SDK>) and ESPBOT_2.0 (<https://github.com/quackmore/espbot_2.0>).
+
+Every sensor is accessible through a single interface with class Esp8266_Sensor (library_sensor.hpp).
+
+    class Esp8266_Sensor
+    {
+      public:
+        Esp8266_Sensor() {}
+        virtual ~Esp8266_Sensor() {}
+    
+        virtual void getSensor(sensor_t *) = 0;
+        virtual int get_max_events_count(void) = 0;
+        virtual void getEvent(sensors_event_t *, int idx = 0) = 0; // idx = 0 => latest event
+                                                                   // idx = 1 => previous event
+                                                                   // ...
+        virtual void force_reading(void (*callback)(void *), void *param) = 0;
+    };
 
 The repository contains a full environment to compile, run and test the library.
 
@@ -22,6 +37,7 @@ The library include files are:
 + library_di_sequence.h
 + library_dio_task.h
 + library_do_sequence.h
++ library_event_codes.h
 + library_max6675.hpp
 + library_sensor.hpp
 + library.h
@@ -39,18 +55,19 @@ more to come ...
 ## Building the binaries and flashing ESP8266
 
 Needed:
-+[Espressif NON-OS SDK](https://github.com/espressif/ESP8266_NONOS_SDK) in a separate repository.
-+[esp-open-sdk toolchain](https://github.com/pfalcon/esp-open-sdk) in a separate repository; build the bare Xtensa toolchain and leave ESP8266 SDK separate using:
 
-      $ make STANDALONE=n
- 
++ [Espressif NON-OS SDK](https://github.com/espressif/ESP8266_NONOS_SDK) in a separate repository.
++ [esp-open-sdk toolchain](https://github.com/pfalcon/esp-open-sdk) in a separate repository; build the bare Xtensa toolchain and leave ESP8266 SDK separate using:
+
+      make STANDALONE=n
 
 Build steps (linux)
-+Clone the repository.
-+Customize build variables according to your ESP8266 module: 
-      
-      $ cd <your path>/espbot
-      $ ./gen_env.sh
+
++ Clone the repository.
++ Customize build variables according to your ESP8266 module and environment:
+
+      cd <your path>/esp8266_library
+      ./gen_env.sh
 
       this will generate a env.sh file
       for instance a WEMOS D1 mini file will look like this:
@@ -62,28 +79,70 @@ Build steps (linux)
       export SPI_SPEED=40
       export SPI_MODE=DIO
       export SPI_SIZE_MAP=4
+      export COMPILE=gcc
+      export COMPORT=<your COM port>
+      export CC_DIR=<your path to compiler>
+      export PATH=$PATH:<your path to compiler>
+      export SDK_DIR=<your path to ESP8266_NONOS_SDK>
+      export BOOT=new
+      export APP=1
+      export SPI_SPEED=40
+      export FREQDIV=0
+      export SPI_MODE=dio
+      export MODE=2
+      export SPI_SIZE_MAP=6
+      export FLASH_SIZE=4096
+      export LD_REF=2048
+      export FLASH_OPTIONS=" write_flash -fm dio -fs 32m-c1 -ff 40m "
+      export FLASH_INIT="0x3FB000 <your path to ESP8266_NONOS_SDK>/bin/blank.bin 0x3FC000 <your path to ESP8266_NONOS_SDK>/bin/esp_init_data_default_v08.bin 0x3FE000 <your path to ESP8266_NONOS_SDK>/blank.bin"
 
-+Build with
++ Building (commands available as tasks in case you are using Visual Studio)
   
-      $ . env.sh
-      $ make
+  Clean project
+  
+      source ${workspaceFolder}/env.sh && make clean
 
-+Flash ESP8266 using esptool.py (checkout you distribution packages or [github repository](https://github.com/espressif/esptool))
+  Building current user#.bin
+
+      source ${workspaceFolder}/env.sh && make all
+
+  Building user1.bin
   
-      this is an example that works for WEMOS D1 mini, customize memory addresses according to your flash size
-      
-      Obtaining a clean starting point
-      $ esptool.py erase_flash
-      
-      Initizalizing flash for ESP SDK
-      $ esptool.py --port /dev/ttyUSB0 write_flash -fm dio -fs 32m -ff 40m 0x00000 <your path to ESP NONOS SDK>/bin/boot_v1.7.bin 
-      $ esptool.py --port /dev/ttyUSB0 write_flash -fm dio -fs 32m -ff 40m 0x3FB000 <your path to ESP NONOS SDK>/bin/blank.bin
-      $ esptool.py --port /dev/ttyUSB0 write_flash -fm dio -fs 32m -ff 40m 0x3FC000 <your path to ESP NONOS SDK>/bin/esp_init_data_default_v08.bin
-      $ esptool.py --port /dev/ttyUSB0 write_flash -fm dio -fs 32m -ff 40m 0x3FE000 <your path to ESP NONOS SDK>/bin/blank.bin
-      
-      Flashing espbot code
-      $ cd <your path>/espbot
-      $ esptool.py --port /dev/ttyUSB0 write_flash -fm dio -fs 32m -ff 40m 0x01000 bin/upgrade/user1.4096.new.4.bin
+      source ${workspaceFolder}/env.sh && make -e APP=1 all
+
+  Building user2.bin
+  
+      source ${workspaceFolder}/env.sh && make -e APP=2 all
+
+  Building both user1.bin and user2.bin
+  
+      source ${workspaceFolder}/env.sh && make -e APP=1 all && make -e APP=2 all
+
++ Flashing ESP8266 using esptool.py (checkout your distribution packages or [github repository](https://github.com/espressif/esptool)) (commands available as tasks in case you are using Visual Studio)
+  
+  Erase flash
+  
+      source ${workspaceFolder}/env.sh && make flash_erase
+
+  Flash the bootloader
+  
+      source ${workspaceFolder}/env.sh && make flash_boot
+
+  Flash init
+  
+      source ${workspaceFolder}/env.sh && make flash_init
+
+  Flash current user#.bin
+  
+      source ${workspaceFolder}/env.sh && make flash
+
+  Flash user1.bin
+  
+      source ${workspaceFolder}/env.sh && make -e APP=1 flash
+
+  Flash user2.bin
+  
+      source ${workspaceFolder}/env.sh && make -e APP=2 flash
 
 ## License
 
