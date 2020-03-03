@@ -248,10 +248,10 @@ code_str[parseInt("0177", 16)] = "CRON_ADD_JOB_CANNOT_COMPLETE";
 code_str[parseInt("0178", 16)] = "CRON_ADD_JOB_HEAP_EXHAUSTED";
 code_str[parseInt("0179", 16)] = "CRON_ENABLED";
 code_str[parseInt("017A", 16)] = "CRON_DISABLED";
-code_str[parseInt("0100", 16)] = "DHT_HEAP_EXHAUSTED";
-code_str[parseInt("0101", 16)] = "DHT_READING_TIMEOUT";
-code_str[parseInt("0102", 16)] = "DHT_READING_CHECKSUM_ERR";
-code_str[parseInt("0103", 16)] = "DHT_READ_HEAP_EXHAUSTED";
-code_str[parseInt("0104", 16)] = "MAX6675_THERMOCOUPLE_DISCONNECTED";
-code_str[parseInt("0105", 16)] = "MAX6675_HEAP_EXHAUSTED";
+code_str[parseInt("1000", 16)] = "DHT_HEAP_EXHAUSTED";
+code_str[parseInt("1001", 16)] = "DHT_READING_TIMEOUT";
+code_str[parseInt("1002", 16)] = "DHT_READING_CHECKSUM_ERR";
+code_str[parseInt("1003", 16)] = "DHT_READ_HEAP_EXHAUSTED";
+code_str[parseInt("1004", 16)] = "MAX6675_THERMOCOUPLE_DISCONNECTED";
+code_str[parseInt("1005", 16)] = "MAX6675_HEAP_EXHAUSTED";
 return code_str[parseInt(code, 16)]; }
