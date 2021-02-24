@@ -35,7 +35,7 @@ extern "C"
 #define APP_RELEASE "Unavailable"
 #endif
 
-char *app_name = "Drivers Test";
+char *app_name = "ESPBOT";
 char *app_release = APP_RELEASE;
 
 Dht *dht22;
