@@ -6,9 +6,15 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
-#ifndef __LIBRARY_HPP__
-#define __LIBRARY_HPP__
+#ifndef __DRIVERS_EVENT_CODES_H__
+#define __DRIVERS_EVENT_CODES_H__
 
-extern char *library_release;
+#define DHT_HEAP_EXHAUSTED 0x1000
+#define DHT_READING_TIMEOUT 0x1001
+#define DHT_READING_CHECKSUM_ERR 0x1002
+#define DHT_READ_HEAP_EXHAUSTED 0x1003
+
+#define MAX6675_THERMOCOUPLE_DISCONNECTED 0x1004
+#define MAX6675_HEAP_EXHAUSTED 0x1005
 
 #endif

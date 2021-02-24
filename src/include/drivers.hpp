@@ -6,9 +6,9 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
-#ifndef __ESPBOT_TEST_HPP__
-#define __ESPBOT_TEST_HPP__
+#ifndef __DRIVERS_HPP__
+#define __DRIVERS_HPP__
 
-void run_test(int, int);
+extern char *drivers_release;
 
 #endif

@@ -25,7 +25,7 @@ function update_home() {
       $("#app_version").val(data.app_version);
       $("#dev_name").val(data.espbot_name);
       $("#espbot_version").val(data.espbot_version);
-      $("#library_version").val(data.library_version);
+      $("#drivers_version").val(data.drivers_version);
       $("#chip_id").val(data.chip_id);
       $("#sdk_version").val(data.sdk_version);
       $("#boot_version").val(data.boot_version);

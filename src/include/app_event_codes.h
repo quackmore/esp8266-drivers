@@ -6,15 +6,11 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
-#ifndef __LIBRARY_H__
-#define __LIBRARY_H__
-
-#include "c_types.h"
+#ifndef __APP_EVENT_CODES_H__
+#define __APP_EVENT_CODES_H__
 
 
-// these are espbot_2.0 memory management methods
-// https://github.com/quackmore/espbot_2.0
-void *call_espbot_zalloc(size_t size);
-void call_espbot_free(void *addr);
+#define APP_INFO_STRINGIFY_HEAP_EXHAUSTED 0x01A0
+#define APP_RUNTEST_HEAP_EXHAUSTED 0x01A1
 
 #endif

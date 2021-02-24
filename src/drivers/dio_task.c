@@ -11,10 +11,10 @@
 #include "osapi.h"
 #include "user_interface.h"
 #include "mem.h"
-#include "library.h"
-#include "library_dio_task.h"
-#include "library_do_sequence.h"
-#include "library_di_sequence.h"
+#include "drivers.h"
+#include "drivers_dio_task.h"
+#include "drivers_do_sequence.h"
+#include "drivers_di_sequence.h"
 
 static os_event_t *dio_queue;
 

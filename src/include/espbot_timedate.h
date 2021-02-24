@@ -6,9 +6,26 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
-#ifndef __ESPBOT_TEST_HPP__
-#define __ESPBOT_TEST_HPP__
 
-void run_test(int, int);
+#ifndef __TIMEDATE_H__
+#define __TIMEDATE_H__
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+#include "c_types.h"
+#ifdef __cplusplus
+}
+#endif
+
+#define ESP_TIMEDATE_MAGIC 0xd9311571
+// declared public cause it's being stored into RTC memory
+struct espbot_time
+{
+    uint32 sntp_time;
+    uint32 rtc_time;
+    uint32 magic;
+};
 
 #endif

@@ -14,18 +14,18 @@ extern "C"
 #include "mem.h"
 #include "user_interface.h"
 #include "ip_addr.h"
-#include "library_di_sequence.h"
-#include "library_do_sequence.h"
+#include "drivers_di_sequence.h"
+#include "drivers_do_sequence.h"
 #include "esp8266_io.h"
 #include "gpio.h"
 }
 
 #include "app.hpp"
 #include "app_test.hpp"
-#include "espbot_global.hpp"
 #include "espbot_mem_macros.h"
+#include "espbot_timedate.hpp"
 #include "espbot_utils.hpp"
-#include "library.hpp"
+#include "drivers.hpp"
 
 // function for testing purpose
 
@@ -92,7 +92,7 @@ static void print_event(sensors_event_t *event, int decimals)
         fs_printf("==> temperature: %s\n", f2str(str.ref, event->temperature, decimals));
     else
         fs_printf("==> humidity   : %s\n", f2str(str.ref, event->relative_humidity, decimals));
-    fs_printf("==>   timestamp: %s\n", esp_time.get_timestr(event->timestamp));
+    fs_printf("==>   timestamp: %s\n", timedate_get_timestr(event->timestamp));
 }
 
 static void get_and_print_max6675_event(void *param)
@@ -157,7 +157,7 @@ static void IRAM dht_start_completed(void *param)
     free_do_seq(seq);
 }
 
-void run_test(int idx)
+void run_test(int idx, int param)
 {
     struct do_seq *seq;
     switch (idx)
@@ -587,13 +587,13 @@ void run_test(int idx)
         //                          idx,
         //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
         //                          (int)(dht22.get_humidity(idx) * 10),
-        //                          esp_time.get_timestr(dht22.get_timestamp(idx)));
+        //                          timedate_get_timestr(dht22.get_timestamp(idx)));
         //            else
         //                fs_printf("--- %d           %d %d %s",
         //                          idx,
         //                          (int)(dht22.get_temperature(Celsius, idx) * 10),
         //                          (int)(dht22.get_humidity(idx) * 10),
-        //                          esp_time.get_timestr(dht22.get_timestamp(idx)));
+        //                          timedate_get_timestr(dht22.get_timestamp(idx)));
         //        }
         //        fs_printf("DHT22 end\n");
         //    }
@@ -606,12 +606,12 @@ void run_test(int idx)
         //            fs_printf("--- (invalid) %d %d %s",
         //                      (int)(dht22.get_temperature(Celsius) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_time.get_timestr(dht22.get_timestamp()));
+        //                      timedate_get_timestr(dht22.get_timestamp()));
         //        else
         //            fs_printf("---           %d %d %s",
         //                      (int)(dht22.get_temperature(Celsius) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_time.get_timestr(dht22.get_timestamp()));
+        //                      timedate_get_timestr(dht22.get_timestamp()));
         //    }
         //    break;
         //    case 13:
@@ -622,12 +622,12 @@ void run_test(int idx)
         //            fs_printf("--- (invalid) %d %d %s",
         //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_time.get_timestr(dht22.get_timestamp()));
+        //                      timedate_get_timestr(dht22.get_timestamp()));
         //        else
         //            fs_printf("---           %d %d %s",
         //                      (int)(dht22.get_temperature(Fahrenheit) * 10),
         //                      (int)(dht22.get_humidity() * 10),
-        //                      esp_time.get_timestr(dht22.get_timestamp()));
+        //                      timedate_get_timestr(dht22.get_timestamp()));
         //    }
         //    break;
         //    case 14:
@@ -641,12 +641,12 @@ void run_test(int idx)
         //                fs_printf("--- %d (invalid) %d %s",
         //                          idx,
         //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                          esp_time.get_timestr(max6675.get_timestamp(idx)));
+        //                          timedate_get_timestr(max6675.get_timestamp(idx)));
         //            else
         //                fs_printf("--- %d           %d %s",
         //                          idx,
         //                          (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                          esp_time.get_timestr(max6675.get_timestamp(idx)));
+        //                          timedate_get_timestr(max6675.get_timestamp(idx)));
         //        }
         //        fs_printf("Max6675 end\n");
         //    }
@@ -659,11 +659,11 @@ void run_test(int idx)
         //            fs_printf("--- %d (invalid) %d %s",
         //                      idx,
         //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                      esp_time.get_timestr(max6675.get_timestamp(idx)));
+        //                      timedate_get_timestr(max6675.get_timestamp(idx)));
         //        else
         //            fs_printf("---           %d %s",
         //                      (int)(max6675.get_temperature(Celsius) * 100),
-        //                      esp_time.get_timestr(max6675.get_timestamp()));
+        //                      timedate_get_timestr(max6675.get_timestamp()));
         //    }
         //    break;
         //    case 16:
@@ -674,11 +674,11 @@ void run_test(int idx)
         //            fs_printf("--- %d (invalid) %d %s",
         //                      idx,
         //                      (int)(max6675.get_temperature(Celsius, idx) * 100),
-        //                      esp_time.get_timestr(max6675.get_timestamp(idx)));
+        //                      timedate_get_timestr(max6675.get_timestamp(idx)));
         //        else
         //            fs_printf("---           %d %s",
         //                      (int)(max6675.get_temperature(Fahrenheit) * 100),
-        //                      esp_time.get_timestr(max6675.get_timestamp()));
+        //                      timedate_get_timestr(max6675.get_timestamp()));
         //    }
         //    break;
     case 17:

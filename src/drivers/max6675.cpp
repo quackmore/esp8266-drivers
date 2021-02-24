@@ -16,11 +16,10 @@ extern "C"
 }
 
 #include "espbot_diagnostic.hpp"
-#include "espbot_global.hpp"
 #include "espbot_timedate.hpp"
-#include "library.hpp"
-#include "library_event_codes.h"
-#include "library_max6675.hpp"
+#include "drivers.hpp"
+#include "drivers_event_codes.h"
+#include "drivers_max6675.hpp"
 
 static void max6675_read_completed(Max6675 *max6675_ptr)
 {
@@ -33,7 +32,7 @@ static void max6675_read_completed(Max6675 *max6675_ptr)
     // thermocouple disconnected => bit 2 is high
     if (max6675_ptr->_data & 0x0004)
     {
-        esp_diag.error(MAX6675_THERMOCOUPLE_DISCONNECTED, (max6675_ptr->_so));
+        dia_error_evnt(MAX6675_THERMOCOUPLE_DISCONNECTED, (max6675_ptr->_so));
         ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] thermocouple disconnected\n",
               max6675_ptr->_cs,
               max6675_ptr->_sck,
@@ -41,7 +40,7 @@ static void max6675_read_completed(Max6675 *max6675_ptr)
         // set the value as invalid
         max6675_ptr->_invalid_buffer[cur_pos] = true;
         // set the timestamp
-        max6675_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+        max6675_ptr->_timestamp_buffer[cur_pos] = timedate_get_timestamp();
         // set the temperature to 0
         max6675_ptr->_temperature_buffer[cur_pos] = 0;
         // update the buffer position
@@ -68,7 +67,7 @@ static void max6675_read_completed(Max6675 *max6675_ptr)
     // set the value as valid
     max6675_ptr->_invalid_buffer[cur_pos] = false;
     // set the timestamp
-    max6675_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+    max6675_ptr->_timestamp_buffer[cur_pos] = timedate_get_timestamp();
     // set the value bits: 12 bits from 3 to 14
     max6675_ptr->_temperature_buffer[cur_pos] = (max6675_ptr->_data >> 3) & 0x0FFF;
     // update the buffer position
@@ -176,7 +175,7 @@ Max6675::Max6675(int cs_pin,
     _temperature_buffer = new int[_max_buffer_size];
     if (_temperature_buffer == NULL)
     {
-        esp_diag.error(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
+        dia_error_evnt(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
         ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] heap exhausted %d",
               _cs,
               _sck,
@@ -189,7 +188,7 @@ Max6675::Max6675(int cs_pin,
     _timestamp_buffer = new uint32_t[_max_buffer_size];
     if (_timestamp_buffer == NULL)
     {
-        esp_diag.error(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(uint32_t)));
+        dia_error_evnt(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(uint32_t)));
         ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] heap exhausted %d",
               _cs,
               _sck,
@@ -202,7 +201,7 @@ Max6675::Max6675(int cs_pin,
     _invalid_buffer = new bool[_max_buffer_size];
     if (_invalid_buffer == NULL)
     {
-        esp_diag.error(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(bool)));
+        dia_error_evnt(MAX6675_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(bool)));
         ERROR("MAX6675 [CS-D%d] [SCK-D%d] [SO-D%d] heap exhausted %d",
               _cs,
               _sck,

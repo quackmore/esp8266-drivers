@@ -1,11 +1,11 @@
-# ESP8266 digital I/O and common sensors library for NON_OS SDK
+# ESP8266 digital I/O and common sensors drivers for NON_OS SDK
 
 ## Summary
 
-Library for ESP8266 digital I/O and compatible sensors.
+Drivers for ESP8266 digital I/O and compatible sensors.
 Based on Espressif NON-OS SDK (<https://github.com/espressif/ESP8266_NONOS_SDK>) and ESPBOT_2.0 (<https://github.com/quackmore/espbot_2.0>).
 
-Every sensor is accessible through a single interface with class Esp8266_Sensor (library_sensor.hpp).
+Every sensor is accessible through a single interface with class Esp8266_Sensor (drivers_sensor.hpp).
 
     class Esp8266_Sensor
     {
@@ -21,27 +21,27 @@ Every sensor is accessible through a single interface with class Esp8266_Sensor 
         virtual void force_reading(void (*callback)(void *), void *param) = 0;
     };
 
-The repository contains a full environment to compile, run and test the library.
+The repository contains a full environment to compile, run and test the drivers.
 
-To import the library in your project as a library use the following file:
+To import the drivers in your project as a library use the following file:
 
-+ lib/liblibrary.a
++ lib/libdrivers.a
 
-To import the library source files use files into src/library.
+To import the drivers source files use files into src/drivers.
 
-The library include files are:
+The drivers include files are:
 
 + esp8266_io.h
-+ library_common_types.hpp
-+ library_dht.hpp
-+ library_di_sequence.h
-+ library_dio_task.h
-+ library_do_sequence.h
-+ library_event_codes.h
-+ library_max6675.hpp
-+ library_sensor.hpp
-+ library.h
-+ library.hpp
++ drivers_common_types.hpp
++ drivers_dht.hpp
++ drivers_di_sequence.h
++ drivers_dio_task.h
++ drivers_do_sequence.h
++ drivers_event_codes.h
++ drivers_max6675.hpp
++ drivers_sensor.hpp
++ drivers.h
++ drivers.hpp
 
 Features:
 
@@ -66,7 +66,7 @@ Build steps (linux)
 + Clone the repository.
 + Customize build variables according to your ESP8266 module and environment:
 
-      cd <your path>/esp8266_library
+      cd <your path>/drivers
       ./gen_env.sh
 
       this will generate a env.sh file
@@ -146,6 +146,6 @@ Build steps (linux)
 
 ## License
 
-The library comes with a [BEER-WARE] license.
+The drivers comes with a [BEER-WARE] license.
 
 Enjoy.

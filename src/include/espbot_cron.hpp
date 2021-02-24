@@ -9,7 +9,7 @@
 #ifndef __APP_CRON_HPP__
 #define __APP_CRON_HPP__
 
-#define CRON_MAX_JOBS 10
+#define CRON_MAX_JOBS 30
 
 struct date
 {
@@ -39,7 +39,7 @@ void cron_sync(void);
  * # |  .------------- hour (0 - 23)
  * # |  |  .---------- day of month (1 - 31)
  * # |  |  |  .------- month (1 - 12) OR jan,feb,mar,apr ...
- * # |  |  |  |  .---- day of week (0 - 6) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+ * # |  |  |  |  .---- day of week (1 - 7) mon,tue,wed,thu,fri,sat,sun
  * # |  |  |  |  |
  * # *  *  *  *  * funcntion
  * 
@@ -47,7 +47,7 @@ void cron_sync(void);
  *         < 0  -> error
  */
 
-int cron_add_job(char min, char hour, char day_of_month, char month, char day_of_week, void (*command)(void));
+int cron_add_job(char min, char hour, char day_of_month, char month, char day_of_week, void (*command)(void *), void *param);
 
 /*
  * delete job_id
@@ -57,23 +57,25 @@ void cron_del_job(int job_id);
 /*
  * get current time as struct date
  */
-struct date *get_current_time(void);
+struct date *cron_get_current_time(void);
 
 /*
  * force initialization of current time before than cron execution
  */
-void init_current_time(void);
+void cron_init_current_time(void);
 
 
 /*
  * CONFIGURATION & PERSISTENCY
  */
-void enable_cron(void);
-void start_cron(void);
-void disable_cron(void);
-void stop_cron(void);
+void cron_enable(void);
+void cron_disable(void);
+void cron_start(void);
+void cron_stop(void);
 bool cron_enabled(void);
-int save_cron_cfg(void); // return CFG_OK on success, otherwise CFG_ERROR
+
+char *cron_cfg_json_stringify(char *dest = NULL, int len = 0);
+int cron_cfg_save(void);
 
 /*
  * DEBUG

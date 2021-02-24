@@ -12,7 +12,7 @@
 #     a generated lib/image xxx.a ()
 #
 ifndef PDIR
-GEN_LIBS = liblibrary.a
+GEN_LIBS = libdrivers.a
 endif
 
 

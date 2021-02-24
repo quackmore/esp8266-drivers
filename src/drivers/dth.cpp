@@ -1,4 +1,4 @@
-/* DHT library
+/* DHT drivers
 
 MIT license
 written by Adafruit Industries
@@ -20,16 +20,15 @@ extern "C"
 #include "mem.h"
 #include "user_interface.h"
 #include "esp8266_io.h"
-#include "library_do_sequence.h"
-#include "library_di_sequence.h"
+#include "drivers_do_sequence.h"
+#include "drivers_di_sequence.h"
 }
 
 #include "espbot_diagnostic.hpp"
-#include "espbot_global.hpp"
 #include "espbot_timedate.hpp"
-#include "library.hpp"
-#include "library_dht.hpp"
-#include "library_event_codes.h"
+#include "drivers.hpp"
+#include "drivers_dht.hpp"
+#include "drivers_event_codes.h"
 
 // DEBUG PROFILING
 // static uint32 dht_start_sequence;
@@ -40,7 +39,7 @@ static void dht_reading_completed(void *param)
     Dht *dht_ptr = (Dht *)param;
     if ((dht_ptr->_dht_in_sequence)->ended_by_timeout)
     {
-        esp_diag.error(DHT_READING_TIMEOUT, (dht_ptr->_dht_in_sequence)->current_pulse);
+        dia_error_evnt(DHT_READING_TIMEOUT, (dht_ptr->_dht_in_sequence)->current_pulse);
         ERROR("dht reading timeout D%d %d samples acquired", dht_ptr->_pin, (dht_ptr->_dht_in_sequence)->current_pulse);
         seq_di_clear(dht_ptr->_dht_in_sequence);
         // calculate buffer position
@@ -52,7 +51,7 @@ static void dht_reading_completed(void *param)
             cur_pos = dht_ptr->_buffer_idx + 1;
         // insert an invalid event
         dht_ptr->_invalid_buffer[cur_pos] = true;
-        dht_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+        dht_ptr->_timestamp_buffer[cur_pos] = timedate_get_timestamp();
         dht_ptr->_temperature_buffer[cur_pos] = 0;
         dht_ptr->_humidity_buffer[cur_pos] = 0;
         // update the buffer position
@@ -123,7 +122,7 @@ static void dht_reading_completed(void *param)
         uint8_t checksum = dht_ptr->_data[0] + dht_ptr->_data[1] + dht_ptr->_data[2] + dht_ptr->_data[3];
         if (checksum != dht_ptr->_data[4])
         {
-            esp_diag.error(DHT_READING_CHECKSUM_ERR, dht_ptr->_pin);
+            dia_error_evnt(DHT_READING_CHECKSUM_ERR, dht_ptr->_pin);
             ERROR("dht reading D%d checksum error", dht_ptr->_pin);
             invalid_data = true;
         }
@@ -133,7 +132,7 @@ static void dht_reading_completed(void *param)
         else
             dht_ptr->_invalid_buffer[cur_pos] = false;
         // get the timestamp
-        dht_ptr->_timestamp_buffer[cur_pos] = esp_time.get_timestamp();
+        dht_ptr->_timestamp_buffer[cur_pos] = timedate_get_timestamp();
         // convert _data to buffer values
         // temperature
         switch (dht_ptr->_type)
@@ -221,7 +220,7 @@ static void IRAM dht_read(Dht *dht_ptr)
         dht_ptr->_dht_out_sequence = new_do_seq(gpio_NUM(dht_ptr->_pin), 2);
         if (dht_ptr->_dht_out_sequence == NULL)
         {
-            esp_diag.error(DHT_READ_HEAP_EXHAUSTED, sizeof(struct do_seq));
+            dia_error_evnt(DHT_READ_HEAP_EXHAUSTED, sizeof(struct do_seq));
             ERROR("dht_read heap exhausted %d", sizeof(struct do_seq));
             return;
         }
@@ -235,7 +234,7 @@ static void IRAM dht_read(Dht *dht_ptr)
         dht_ptr->_dht_in_sequence = new_di_seq(gpio_NUM(dht_ptr->_pin), 82, 100, TIMEOUT_MS);
         if (dht_ptr->_dht_in_sequence == NULL)
         {
-            esp_diag.error(DHT_READ_HEAP_EXHAUSTED, sizeof(struct do_seq));
+            dia_error_evnt(DHT_READ_HEAP_EXHAUSTED, sizeof(struct do_seq));
             ERROR("dht_read heap exhausted %d", sizeof(struct di_seq));
             return;
         }
@@ -267,7 +266,7 @@ Dht::Dht(int pin,
     _temperature_buffer = new int[_max_buffer_size];
     if (_temperature_buffer == NULL)
     {
-        esp_diag.error(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
+        dia_error_evnt(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
         ERROR("Dht heap exhausted %d", (_max_buffer_size * sizeof(int)));
         return;
     }
@@ -276,7 +275,7 @@ Dht::Dht(int pin,
     _humidity_buffer = new int[_max_buffer_size];
     if (_humidity_buffer == NULL)
     {
-        esp_diag.error(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
+        dia_error_evnt(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
         ERROR("Dht heap exhausted %d", (_max_buffer_size * sizeof(int)));
         return;
     }
@@ -285,7 +284,7 @@ Dht::Dht(int pin,
     _invalid_buffer = new bool[_max_buffer_size];
     if (_invalid_buffer == NULL)
     {
-        esp_diag.error(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
+        dia_error_evnt(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
         ERROR("Dht heap exhausted %d", (_max_buffer_size * sizeof(bool)));
         return;
     }
@@ -294,7 +293,7 @@ Dht::Dht(int pin,
     _timestamp_buffer = new uint32_t[_max_buffer_size];
     if (_timestamp_buffer == NULL)
     {
-        esp_diag.error(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
+        dia_error_evnt(DHT_HEAP_EXHAUSTED, (_max_buffer_size * sizeof(int)));
         ERROR("Dht heap exhausted %d", (_max_buffer_size * sizeof(uint32_t)));
         return;
     }

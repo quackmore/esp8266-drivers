@@ -6,39 +6,37 @@
  * think this stuff is worth it, you can buy me a beer in return. Quackmore
  * ----------------------------------------------------------------------------
  */
+#ifndef __CFGFILE_HPP__
+#define __CFGFILE_HPP__
 
-#ifndef __WEBSERVER_HPP__
-#define __WEBSERVER_HPP__
+#include "espbot_spiffs.hpp"
+#include "espbot_json.hpp"
 
-extern "C"
-{
-#include "c_types.h"
-#include "espconn.h"
-}
+enum {
+  CFG_ok = 0,
+  CFG_cantRestore,
+  CFG_error,
+  CFG_notUpdated
+};
 
-#define SERVER_PORT 80
-
-typedef enum
-{
-  up = 0,
-  down
-} Websvr_status;
-
-class Websvr
+/**
+ * @brief Config file class
+ * A config file with JSON syntax
+ * 
+ */
+class Cfgfile: public Espfile, public JSONP
 {
 public:
-  Websvr(){};
-  ~Websvr(){};
-
-  void init(void);
-  void start(uint32); // port
-  void stop(void);
-  Websvr_status get_status(void);
-
-private:
-  Websvr_status m_status;
-  struct espconn m_esp_conn;
-  esp_tcp m_esptcp;
+  char *_json_str;
+  
+  /**
+   * @brief Construct a new Cfgfile object
+   * 
+   * @param filename 
+   */
+  Cfgfile(char *filename);
+  ~Cfgfile();
 };
+
 
 #endif
