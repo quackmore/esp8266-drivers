@@ -7,3 +7,4 @@ lib/*.a
 !.vscode
 .vscode/*
 !.vscode/tasks.json
+lib/libdrivers.a
